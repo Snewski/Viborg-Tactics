@@ -3,11 +3,15 @@
 
 ## To-Do ##
 
+## Script-Related ##
 # Write text chunks for the different parts (consent, instructions, etc.)
-# Make windows to show stimuli
-# Find video stimuli and group with red dots
-# Make pictures for tactical decisions and make sure data is collected in the desired format
+# Make windows for stimuli and tactical decisions
+# Make sure data is collected in a desired format
+# Randomize stimuli order, while keeping video and related red dot together
 # Make 2-3 practice trials to familiarize participants
+## Non-Script ##
+# Find video stimuli and group with red dots
+# Make pictures and text for tactical decisions
 
 
 ## Importing modules ##
@@ -58,15 +62,25 @@ logfile = pd.DataFrame(columns = columns)
 
 
 ## Presenting introduction/consent ##
-win = visual.Window(fullscr = True)
-instruction = visual.TextStim(win,text = ?, color="black", height=0.08) # needs consent form/introduction
-instruction.draw()
-win.flip()
-event.waitKeys()
-# Close the window
-win.close()
+def present_text(text): # Function to present text: the only parameter is a (str) with the text to display
+    # Create a full-screen PsychoPy window
+    win = visual.Window(fullscr=True)
+    # Create the text stimulus
+    instruction = visual.TextStim(win, text=text, color="black", height=0.08) # The height parameter might need to be adjusted
+    # Draw the text and flip the window to display it
+    instruction.draw()
+    win.flip()
+    # Wait for the spacebar to be pressed
+    event.waitKeys(keyList=['space'])
+    # Close the window
+    win.close()
 
 
+# Example usage
+example_text = "This is an example. Press the spacebar to continue."
+present_text(example_text)
+# Alternatively you can also just write the string into the function as below
+#present_text("This is an example. Press the spacebar to continue.")
 
 
 
