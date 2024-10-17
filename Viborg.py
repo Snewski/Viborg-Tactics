@@ -107,20 +107,13 @@ def present_text_and_image(text, image_path):  # Added an image_path parameter
     win.close()
 
 
-
-
-# Example usage
-
-
-
-
-
 # Example usage
 #example_text = "This is an example. Press the spacebar to continue."
 #present_text(example_text)
 # Alternatively you can also just write the string into the function as below
 #present_text("This is an example. Press the spacebar to continue.")
 
+## the consent and instruction section ##
 present_text(consent_text)
 present_text(warmup_text1)
 present_text_and_image(warmup_text2, "Pictures/warmup_reddot.png")
