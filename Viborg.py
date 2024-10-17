@@ -4,11 +4,13 @@
 ## To-Do ##
 
 ## Script-Related ##
-# Write text chunks for the different parts (consent, instructions, etc.)
+# Translate (if needed) text chunks for the different parts (consent, instructions, etc.)
 # Make windows for stimuli and tactical decisions
+# Save the inputs in logfiles
 # Make sure data is collected in a desired format
 # Randomize stimuli order, while keeping video and related red dot together
 # Make 2-3 practice trials to familiarize participants
+
 ## Non-Script ##
 # Find video stimuli and group with red dots
 # Make pictures and text for tactical decisions
@@ -68,7 +70,7 @@ warmup_text3 = "After each scene, 4 figures will show up on the screen describin
 #display example options
 warmup_text4 = "You must mark the best solution option for the play and ﻿﻿﻿answer as fast as possible. Your score will be based on your answer and response time. Press space to begin the warm up."
 #intro_text = "Warm up is completed, press space if you are ready to begin the test"
-#task_text = "What should the featured player do?"
+task_text = "What should the featured player do?"
 #next_text = "Next scene"
 
 ## Presenting introduction/consent ##
@@ -106,6 +108,87 @@ def present_text_and_image(text, image_path):  # Added an image_path parameter
     # Close the window
     win.close()
 
+## Presenting video ##
+def present_video(video_path):
+    # Create a full-screen PsychoPy window
+    win = visual.Window(fullscr=True)
+    
+    # Create the video stimulus
+    video_stim = visual.MovieStim3(win, video_path, size=(1600, 900))  # Adjust the size as needed, (1920, 1080) is fullscreen
+    
+    # Play the video until it finishes
+    while video_stim.status != visual.FINISHED:
+        video_stim.draw()
+        win.flip()
+        
+    # Close the window after the video ends
+    win.close()
+
+
+
+## Choosing option ##
+from psychopy import visual, event, core
+import random
+
+def present_text_and_images(text, image_paths):
+    # Create a full-screen PsychoPy window
+    win = visual.Window(fullscr=True)
+    
+    # Create the text stimulus
+    instruction = visual.TextStim(win, text=text, color="black", height=0.08, pos=(0, 0.6))
+    
+    # Randomly select two images from the list and shuffle their order
+    selected_images = random.sample(image_paths, 2)
+    random.shuffle(selected_images)
+    
+    # Create the image stimuli
+    image_stim_left = visual.ImageStim(win, image=selected_images[0], pos=(-0.5, -0.3), size=(0.9, 0.9))
+    image_stim_right = visual.ImageStim(win, image=selected_images[1], pos=(0.5, -0.3), size=(0.9, 0.9))
+    
+    # Draw the text and images, and flip the window to display them
+    instruction.draw()
+    image_stim_left.draw()
+    image_stim_right.draw()
+    win.flip()
+    
+    # Wait for mouse click on either image
+    mouse = event.Mouse(win=win)
+    clicked = False
+    chosen_image = None
+
+    while not clicked:
+        if mouse.getPressed()[0]:  # Check if the left mouse button is pressed
+            mouse_x, mouse_y = mouse.getPos()
+            if image_stim_left.contains(mouse_x, mouse_y):
+                chosen_image = selected_images[0]  # Left image clicked
+                clicked = True
+            elif image_stim_right.contains(mouse_x, mouse_y):
+                chosen_image = selected_images[1]  # Right image clicked
+                clicked = True
+    
+    #idk if we need it but added a countdown and "next scene" (just like in tactic up)
+    # Start a 3-second countdown
+    for i in range(3, 0, -1):
+        countdown_text = visual.TextStim(win, text=str(i), color="black", height=0.1, pos=(0, 0))  # Center countdown
+        countdown_text.draw()  # Draw the updated instruction
+        win.flip()  # Show the countdown
+        core.wait(1)  # Wait for 1 second for each number
+
+    # Display "Next Scene" centered
+    next_scene_text = visual.TextStim(win, text="Next Scene", color="black", height=0.1, pos=(0, 0))  # Center "Next Scene"
+    next_scene_text.draw()
+    win.flip()
+    core.wait(1)  # Wait for 1 second before closing the window
+
+    # Close the window
+    win.close()
+
+
+# Example usage
+image_paths = ['Pictures/option1.png', 'Pictures/option2.png']
+#present_text_and_images(task_text, image_paths)
+
+
 
 # Example usage
 #example_text = "This is an example. Press the spacebar to continue."
@@ -121,6 +204,9 @@ present_text_and_image("Example", "Pictures/warmup_field.png")
 present_text_and_image(warmup_text3, "Pictures/warmup_options.png")
 present_text(warmup_text4)
 
+## the warm up section ##
+present_video("Videos_Dots/warmup_vid_1.mp4")
+present_text_and_images(task_text, image_paths)
 
 
 
