@@ -27,17 +27,22 @@ if not os.path.exists("logfiles"):
     os.makedirs("logfiles")
 
 
+## Setting up dataframe ##
+columns = ['Number', 'Position', 'Age', 'Foot', 'Experience', 'Tactic', 'Decision'] # Need columns for the tactical data
+logfile = pd.DataFrame(columns = columns)
+
+
 ## GUI ##
 # Creating dialogue box
 DialogueBox = gui.Dlg(title = "Viborg Tactics")
 DialogueBox.addText('Udfyld venligst de nedenstående felter:')
 list_of_numbers = list(range(1, 17)) # Options for years of experience
 # Adding information fields
-DialogueBox.addField('Position:', choices = ['Fosvarsspiller', 'Midtbanespiller', 'Angriber'], color = "green")
+DialogueBox.addField('Hvor på banen spiller du?:', choices = ['Fosvarsspiller', 'Midtbanespiller', 'Angriber'], color = "green")
 DialogueBox.addField('Dit trøjenummer:', color = "black")
 DialogueBox.addField('Hvilken fod er din dominante?:', choices = ['Højre', 'Venstre'],color = "green")
-DialogueBox.addField('Alder:', color = "black")
-DialogueBox.addField('Hvor mange år har du spillet fodboldt?:', choices = list_of_numbers, color = "green")
+DialogueBox.addField('Din alder:', color = "black")
+DialogueBox.addField('Hvor mange år har du spillet fodbold?:', choices = list_of_numbers, color = "green")
 # Showing dialogue box
 DialogueBox.show()
 
@@ -53,24 +58,19 @@ else:
     core.quit()
 
 
-## Setting up dataframe ##
-columns = ['Number', 'Position', 'Age', 'Foot', 'Experience'] # Need columns for the tactical data
-logfile = pd.DataFrame(columns = columns)
-
-
 ## All text chunks ##
 
-consent_text = "Dear participant, you are going to take part in a test aiming to asses your knowledge of football strategies and decision making. The test will take approximately [time duration]. Please reserve this time for the full test, as it must be completed once it has started. The responses will be anonymized, and the data will be solely used for research and training purposes. If you consent and would like to proceed to the test, press the space bar."
+consent_text = "Kære deltager, du skal til at tage en test, der har til formål at vurdere din viden om fodboldstrategier og beslutningstagning. Testen tager omkring [x minutter], så vær forberedt på at afsætte din tid til dette, da testen skal gennemføres, når først den er startet. Din besvarelse vil blive anonymiseret, og dataen vil udelukkende blive brugt til forsknings- og træningsformål. \n\n Hvis du giver samtykke og gerne vil fortsætte til testen, skal du trykke på mellemrumstasten."
 
-warmup_text1 = "You will be presented with 3 warm up scenes so that you get used to the task. After the warm up scenes, we will start the test. Press the space bar to continue."
+warmup_text1 = "Du vil nu blive præsenteret for 3 opvarmningsøvelser, så du vænner dig til testens struktur. I testen får du vist en kort video som omhandler en specifik spilsituation, hvorefter du skal tage en taktisk beslutning. Efter opvarmningsøvelserne starter testen. \n\n Tryk på mellemrumstasten for at fortsætte."
 
-warmup_text2 = "Before each scene starts a red dot will point where the ball is, while a red circle will indicate where the player that you need to watch will be. Press the space bar to continue."
+warmup_text2 = "Før hver spilsituation bliver vist, vil en rød prik indikere hvor bolden er, mens en rød cirkel vil angive, hvor spilleren du skal holde øje med, vil være. \n\n Tryk på mellemrumstasten for at fortsætte."
 #display a black image with red dot and red circle example along warmup_text2
-warmup_text3 = "After each scene, 4 figures will show up on the screen describing the watched player movement through arrows (the arrow doesn't represents the player's final position, only the direction of his movement.)"
+warmup_text3 = "Efter hver spilsituation vil 4 figurer blive vist på skærmen, der beskriver mulige beslutninger som den markerede spiller kan træffe igennem pile (pilene repræsenterer ikke spillerens endelige position, kun retningen af ​​hans bevægelse)."
 #display example options
-warmup_text4 = "You must mark the best solution option for the play and ﻿﻿﻿answer as fast as possible. Your score will be based on your answer and response time. Press space to begin the warm up."
-#intro_text = "Warm up is completed, press space if you are ready to begin the test"
-task_text = "What should the featured player do?"
+warmup_text4 = "Du skal markere den bedste løsningsmulighed for situationen og svare så hurtigt som muligt. Din score vil blive baseret på dit svar og din svartid. \n\n Tryk på mellemrumstasten for at starte opvarmningen."
+#intro_text = "Opvarmningen er nu færdig, tryk på mellemrumstasten når du er klar til at starte testen"
+task_text = "Hvad burde den markerede spiller gøre?"
 #next_text = "Next scene"
 
 ## Presenting introduction/consent ##
@@ -111,24 +111,21 @@ def present_text_and_image(text, image_path):  # Added an image_path parameter
 ## Presenting video ##
 def present_video(video_path):
     # Create a full-screen PsychoPy window
-    win = visual.Window(fullscr=True)
-    
+    win = visual.Window(fullscr=False)
     # Create the video stimulus
-    video_stim = visual.MovieStim3(win, video_path, size=(1600, 900))  # Adjust the size as needed, (1920, 1080) is fullscreen
-    
+    video_stim = visual.MovieStim(win, video_path, size=(1600, 900))  # Adjust the size as needed, (1920, 1080) is fullscreen
     # Play the video until it finishes
     while video_stim.status != visual.FINISHED:
         video_stim.draw()
         win.flip()
-        
+    # Wait a short moment before closing
+    core.wait(2)
     # Close the window after the video ends
     win.close()
 
 
 
 ## Choosing option ##
-from psychopy import visual, event, core
-import random
 
 def present_text_and_images(text, image_paths):
     # Create a full-screen PsychoPy window
@@ -175,7 +172,7 @@ def present_text_and_images(text, image_paths):
         core.wait(1)  # Wait for 1 second for each number
 
     # Display "Next Scene" centered
-    next_scene_text = visual.TextStim(win, text="Next Scene", color="black", height=0.1, pos=(0, 0))  # Center "Next Scene"
+    next_scene_text = visual.TextStim(win, text="Næste Situation", color="black", height=0.1, pos=(0, 0))  # Center "Next Scene"
     next_scene_text.draw()
     win.flip()
     core.wait(1)  # Wait for 1 second before closing the window
@@ -184,28 +181,21 @@ def present_text_and_images(text, image_paths):
     win.close()
 
 
-# Example usage
+
 image_paths = ['Pictures/option1.png', 'Pictures/option2.png']
-#present_text_and_images(task_text, image_paths)
 
 
-
-# Example usage
-#example_text = "This is an example. Press the spacebar to continue."
-#present_text(example_text)
-# Alternatively you can also just write the string into the function as below
-#present_text("This is an example. Press the spacebar to continue.")
 
 ## the consent and instruction section ##
 present_text(consent_text)
 present_text(warmup_text1)
 present_text_and_image(warmup_text2, "Pictures/warmup_reddot.png")
-present_text_and_image("Example", "Pictures/warmup_field.png")
+present_text_and_image("For eksempel", "Pictures/warmup_field.png")
 present_text_and_image(warmup_text3, "Pictures/warmup_options.png")
 present_text(warmup_text4)
 
 ## the warm up section ##
-present_video("Videos_Dots/warmup_vid_1.mp4")
+#present_video("Videos_Dots/warmup_vid_1.mp4")
 present_text_and_images(task_text, image_paths)
 
 
