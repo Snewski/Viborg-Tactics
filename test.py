@@ -1,21 +1,37 @@
 from psychopy import visual, core, event
 
-# Create a window
-win = visual.Window(size=(800, 600))
+# Create a full-screen PsychoPy window
+win = visual.Window(fullscr=False, color=(0, 0, 0), units='pix')
 
-# Load the movie
-movie = visual.MovieStim3(win, 'Videos_Dots/warmup_vid_1.mp4', size=(640, 480))
+# Specify the path to your video file
+video_path = 'Videos_Dots/warmup_vid_1.mp4'
 
-# Play the movie
-while movie.status != visual.FINISHED:
-    movie.draw()
-    win.flip()
+# Create the video stimulus
+video_stim = visual.MovieStim(win, video_path, size=(1600, 900))
 
-    # Optional: Break the video with a keypress
-    if event.getKeys():
+# Set autoDraw to True to automatically draw the video stimulus
+video_stim.autoDraw = True
+
+# Start the video playback
+while True:
+    if video_stim.status == visual.FINISHED:
+        break  # Exit the loop if the video has finished
+
+    win.flip()  # Update the window
+
+    # Check for quit (pressing 'q' will close the window)
+    if event.getKeys(['q']):
         break
 
-# Clean up
-movie.stop()
+# Cleanup
+video_stim.autoDraw = False
 win.close()
-core.quit()
+
+
+# Test the function with the path to your video
+#present_video('Videos_Dots/warmup_vid_1.mp4')
+
+
+
+
+
