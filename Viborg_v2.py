@@ -74,7 +74,7 @@ if DialogueBox.OK:
     logfile = logfile.append(new_entry, ignore_index=True)
 
     # Save the logfile as a CSV
-    logfile.to_csv("logfiles/tactical_log.csv", index=False)
+    logfile.to_csv("Version2/logfiles/tactical_log.csv", index=False)
     
 else:
     core.quit()
