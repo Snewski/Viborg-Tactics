@@ -19,8 +19,7 @@
 
 ## Importing modules ##
 from psychopy import visual, event, core, gui, data, clock
-import pandas as pd, random, os
-import glob
+import pandas as pd, random, os, glob
 
 
 ## Logfile ##
@@ -30,7 +29,7 @@ if not os.path.exists("logfiles"):
 
 
 ## Setting up dataframe ##
-columns = ['Number', 'Position', 'Age', 'Foot', 'Experience', 'Experience_VFF' , 'Tactic', 'Decision'] # Need columns for the tactical data
+columns = ['Number', 'Position', 'Age', 'Foot', 'Experience', 'Experience_VFF' , 'Tactic', 'Decision', 'RT'] # Need columns for the tactical data
 logfile = pd.DataFrame(columns = columns)
 
 
@@ -38,12 +37,12 @@ logfile = pd.DataFrame(columns = columns)
 # Creating dialogue box
 DialogueBox = gui.Dlg(title = "Viborg Tactics")
 DialogueBox.addText('Udfyld venligst de nedenstående felter:')
-list_of_numbers = list(range(1, 17)) # Options for years of experience
+list_of_numbers = list(range(0, 20)) # Options for years of experience
 # Adding information fields
 DialogueBox.addField('Hvor på banen spiller du?:', choices = ['Fosvarsspiller', 'Midtbanespiller', 'Angriber'], color = "green")
-DialogueBox.addField('Dit trøjenummer:', color = "black")
+DialogueBox.addField('Hvad er dit trøjenummer:', color = "black")
 DialogueBox.addField('Hvilken fod er din dominante?:', choices = ['Højre', 'Venstre'],color = "green")
-DialogueBox.addField('Din alder:', color = "black")
+DialogueBox.addField('Hvad er din alder:', color = "black")
 DialogueBox.addField('Hvor mange år har du spillet fodbold?:', choices = list_of_numbers, color = "green")
 DialogueBox.addField('Hvor mange år har du spillet fodbold hos VFF?:', choices = list_of_numbers, color = "black")
 # Showing dialogue box
@@ -58,22 +57,6 @@ if DialogueBox.OK:
     Age = DialogueBox.data[3]
     Experience = DialogueBox.data[4]
     Experience_VFF = DialogueBox.data[5]
-
-    # Create a new entry as a dictionary
-    new_entry = {
-        'Number': Number,
-        'Position': Position,
-        'Age': Age,
-        'Foot': Foot,
-        'Experience': Experience,
-        'Experience_VFF': Experience_VFF,
-        'Tactic': '',  # Placeholder for tactical data
-        'Decision': ''  # Placeholder for decision data
-    }
-
-    # Append the new entry to the logfile dataframe
-    logfile = logfile.append(new_entry, ignore_index=True)
-    
 else:
     core.quit()
 
@@ -108,7 +91,6 @@ def present_text(text): # Function to present text: the only parameter is a (str
     win.close()
 
 ## Presenting example with image ##
-
 def present_text_and_image(text, image_path):  # Added an image_path parameter
     # Create a full-screen PsychoPy window
     win = visual.Window(fullscr=True)
@@ -116,15 +98,12 @@ def present_text_and_image(text, image_path):  # Added an image_path parameter
     instruction = visual.TextStim(win, text=text, color="black", height=0.08, pos=(0, 0.6))  # Position text higher
     # Create the image stimulus
     image_stim = visual.ImageStim(win, image=image_path, pos=(0, -0.3), size=(1, 1))  # Position image below text
-    
     # Draw the text and image, and flip the window to display them
     instruction.draw()
     image_stim.draw()
     win.flip()
-    
     # Wait for the spacebar to be pressed
     event.waitKeys(keyList=['space'])
-    
     # Close the window
     win.close()
 
@@ -142,18 +121,10 @@ def present_video(video_path):
     core.wait(2)
     # Close the window after the video ends
     win.close()
+    # Save video path for logfile
+    return video_path
 
-
-# Use glob to get all .png files in the directory
-image_paths = glob.glob('Pictures/Klip_1/*.png')
-
-# Make sure there are only four images in the directory; otherwise, select four at random
-if len(image_paths) > 4:
-    image_paths = random.sample(image_paths, 4)
-
-# Map the chosen image to a decision using its filename
-decision_map = {img_path: os.path.splitext(os.path.basename(img_path))[0] for img_path in image_paths}
-
+## Presenting Decision ##
 def present_text_and_images(text, image_paths, logfile, index):
     # Create a full-screen PsychoPy window
     win = visual.Window(fullscr=True)
@@ -207,10 +178,7 @@ def present_text_and_images(text, image_paths, logfile, index):
                 clicked = True
     
     # Retrieve the decision from the decision_map using the chosen image
-    decision = decision_map.get(chosen_image, None)
-    
-    # Store the decision in the logfile DataFrame
-    logfile.at[index, 'Decision'] = decision
+    Decision = decision_map.get(chosen_image, None)
     
     # Start a 3-second countdown (optional)
     for i in range(3, 0, -1):
@@ -227,12 +195,8 @@ def present_text_and_images(text, image_paths, logfile, index):
 
     # Close the window
     win.close()
-
-
-# Updated image paths list with four options
-#image_paths1 = ['Version2/Pictures/option1.png', 'Version2/Pictures/option2.png', 'Version2/Pictures/option3.png', 'Version2/Pictures/option4.png']
-
-
+    # Save the decision
+    return Decision
 
 ## the consent and instruction section ##
 present_text(consent_text)
@@ -263,8 +227,20 @@ for index, folder_name in enumerate(folder_names):
     decision_map = {img_path: os.path.splitext(os.path.basename(img_path))[0] for img_path in image_paths}
     
     # Present the video and the images
-    present_video(f"{base_path}/{folder_name}/{folder_name}.mp4")
-    present_text_and_images(task_text, image_paths, logfile, index=index)
+    Video_path = present_video(f"{base_path}/{folder_name}/{folder_name}.mp4")
+    Decision = present_text_and_images(task_text, image_paths, logfile, index=index)
+    
+    # Append the new entry to the logfile dataframe
+    logfile = logfile.append({
+        'Number': Number,
+        'Position': Position,
+        'Age': Age,
+        'Foot': Foot,
+        'Experience': Experience,
+        'Experience_VFF': Experience_VFF,
+        'Tactic': Video_path,
+        'Decision': Decision
+    }, ignore_index=True)
 
 # Display "Tak" at the end
 win = visual.Window(fullscr=True)
@@ -273,8 +249,6 @@ thank_you_text.draw()
 win.flip()
 core.wait(2)  # Display "Tak" for 2 seconds
 win.close()
-
-
 
 ## Save logfile ##
 logfile_name = f"logfiles/logfile_{Number}.csv"
