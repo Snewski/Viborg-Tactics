@@ -156,10 +156,14 @@ def present_text_and_images(text, image_paths, logfile, index):
     image_stim_bottom_right.draw()
     win.flip()
     
+    # Initialize and start the timer
+    timer = core.Clock()
+    
     # Wait for mouse click on any image
     mouse = event.Mouse(win=win)
     clicked = False
     chosen_image = None
+    Response_time = None  # To store the time taken to make a selection
     
     while not clicked:
         if mouse.getPressed()[0]:  # Check if the left mouse button is pressed
@@ -176,6 +180,9 @@ def present_text_and_images(text, image_paths, logfile, index):
             elif image_stim_bottom_right.contains(mouse_x, mouse_y):
                 chosen_image = image_paths[3]  # Bottom right image clicked
                 clicked = True
+    
+    # Record the response time when an image is clicked
+    Response_time = timer.getTime()
     
     # Retrieve the decision from the decision_map using the chosen image
     Decision = decision_map.get(chosen_image, None)
@@ -196,7 +203,7 @@ def present_text_and_images(text, image_paths, logfile, index):
     # Close the window
     win.close()
     # Save the decision
-    return Decision
+    return Decision, Response_time
 
 ## the consent and instruction section ##
 present_text(consent_text)
@@ -209,7 +216,6 @@ present_text(consent_text)
 # Define the base path and number of folders
 base_path = "Pictures"
 num_folders = 5
-
 # Generate the folder names and shuffle them for a random order
 folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
 random.shuffle(folder_names)
@@ -228,7 +234,7 @@ for index, folder_name in enumerate(folder_names):
     
     # Present the video and the images
     Video_path = present_video(f"{base_path}/{folder_name}/{folder_name}.mp4")
-    Decision = present_text_and_images(task_text, image_paths, logfile, index=index)
+    Decision, Response_time = present_text_and_images(task_text, image_paths, logfile, index=index)
     
     # Append the new entry to the logfile dataframe
     logfile = logfile.append({
@@ -239,7 +245,8 @@ for index, folder_name in enumerate(folder_names):
         'Experience': Experience,
         'Experience_VFF': Experience_VFF,
         'Tactic': Video_path,
-        'Decision': Decision
+        'Decision': Decision,
+        'RT': Response_time
     }, ignore_index=True)
 
 # Display "Tak" at the end
