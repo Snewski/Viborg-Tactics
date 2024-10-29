@@ -4,12 +4,13 @@
 ## To-Do ##
 
 ## Script-Related ##
-# Translate (if needed) text chunks for the different parts (consent, instructions, etc.)
-# Make windows for stimuli and tactical decisions
+# Optimize the loading of the videos and images
 # Save the inputs in logfiles
 # Make sure data is collected in a desired format
 # Randomize stimuli order, while keeping video and related red dot together
 # Make 2-3 practice trials to familiarize participants
+# Change the images from instructions (from tactic up screenshots to Viborg pictures)
+# Add reaction time measurement
 
 ## Non-Script ##
 # Find video stimuli and group with red dots
@@ -24,8 +25,8 @@ import glob
 
 ## Logfile ##
 # Making sure there is a logfile directory
-if not os.path.exists("Version2/logfiles"):
-    os.makedirs("Version2/logfiles")
+if not os.path.exists("logfiles"):
+    os.makedirs("logfiles")
 
 
 ## Setting up dataframe ##
@@ -72,9 +73,6 @@ if DialogueBox.OK:
 
     # Append the new entry to the logfile dataframe
     logfile = logfile.append(new_entry, ignore_index=True)
-
-    # Save the logfile as a CSV
-    logfile.to_csv("Version2/logfiles/tactical_log.csv", index=False)
     
 else:
     core.quit()
@@ -147,7 +145,7 @@ def present_video(video_path):
 
 
 # Use glob to get all .png files in the directory
-image_paths = glob.glob('Version2/Pictures/Klip_1/*.png')
+image_paths = glob.glob('Pictures/Klip_1/*.png')
 
 # Make sure there are only four images in the directory; otherwise, select four at random
 if len(image_paths) > 4:
@@ -239,13 +237,13 @@ def present_text_and_images(text, image_paths, logfile, index):
 ## the consent and instruction section ##
 present_text(consent_text)
 #present_text(warmup_text1)
-#present_text_and_image(warmup_text2, "Version2/Pictures/warmup_reddot.png")
-#present_text_and_image("For eksempel", "Version2/Pictures/warmup_field.png")
-#present_text_and_image(warmup_text3, "Version2/Pictures/warmup_options.png")
+#present_text_and_image(warmup_text2, "Pictures/warmup_reddot.png")
+#present_text_and_image("For eksempel", "Pictures/warmup_field.png")
+#present_text_and_image(warmup_text3, "Pictures/warmup_options.png")
 #present_text(warmup_text4)
 
 # Define the base path and number of folders
-base_path = "Version2/Pictures"
+base_path = "Pictures"
 num_folders = 5
 
 # Generate the folder names and shuffle them for a random order
@@ -279,5 +277,5 @@ win.close()
 
 
 ## Save logfile ##
-logfile_name = f"VErsion2/logfiles/logfile_{Number}.csv"
+logfile_name = f"logfiles/logfile_{Number}.csv"
 logfile.to_csv(logfile_name)
