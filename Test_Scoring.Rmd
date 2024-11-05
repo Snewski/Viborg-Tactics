@@ -1,0 +1,60 @@
+---
+title: "Test_Scoring"
+author: "P.H.W"
+date: "2024-10-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Install packages if needed...
+library(dplyr)
+
+```
+
+
+
+```{r, loading data}
+
+# Set the path to your logfiles directory
+file_path <- 'logfiles/'
+
+# Get a list of all CSV files in the directory
+files <- list.files(file_path, pattern = "*.csv", full.names = TRUE)
+
+# Read and combine all CSV files into a single data frame
+combined_data <- do.call(rbind, lapply(files, read.csv))
+
+```
+
+
+```{r, data cleaning}
+
+# Renaming and starting trial order from 1 instead of 0
+combined_data$Trial_Number <- combined_data$X+1
+combined_data$X <- NULL
+
+
+# Remove "Pictures/" and ".mp4" from the Tactic column
+combined_data$Tactic <- gsub("Pictures/|\\.mp4$", "", combined_data$Tactic)
+
+mapping <- c(
+  "1" = "Highest free man",
+  "2" = "Link out",
+  "3" = "Switch play to open lines",
+  "4" = "Pass it over the opponent"
+)
+
+combined_data$Highest_Priority <- mapping[
+  as.character(as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Tactic)))
+]
+
+
+```
+
+
+
+
+
+
