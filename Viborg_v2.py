@@ -76,10 +76,33 @@ warmup_text4 = "Du skal markere den bedste løsningsmulighed for situationen og 
 task_text = "Hvad burde den markerede spiller gøre?"
 #next_text = "Next scene"
 
+## Create a full-screen window once at the start ##
+win = visual.Window(fullscr=True)
+
+## Preload videos and images ##
+base_path = "Pictures"
+num_folders = 5
+folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
+random.shuffle(folder_names)
+
+video_stimuli = {}
+image_stimuli = {}
+
+for folder_name in folder_names:
+    # Preload videos
+    video_path = f"{base_path}/{folder_name}/{folder_name}.mp4"
+    video_stimuli[folder_name] = visual.MovieStim3(win, video_path, size=(1600, 900))
+    
+    # Preload images
+    image_paths = glob.glob(f"{base_path}/{folder_name}/*.png")
+    if len(image_paths) > 4:
+        image_paths = random.sample(image_paths, 4)  # Ensure only 4 images are used
+    image_stimuli[folder_name] = [visual.ImageStim(win, img_path, size=(0.7, 0.7)) for img_path in image_paths]
+
 ## Presenting introduction/consent ##
 def present_text(text): # Function to present text: the only parameter is a (str) with the text to display
     # Create a full-screen PsychoPy window
-    win = visual.Window(fullscr=True)
+    #win = visual.Window(fullscr=True)
     # Create the text stimulus
     instruction = visual.TextStim(win, text=text, color="black", height=0.08) # The height parameter might need to be adjusted
     # Draw the text and flip the window to display it
@@ -88,12 +111,12 @@ def present_text(text): # Function to present text: the only parameter is a (str
     # Wait for the spacebar to be pressed
     event.waitKeys(keyList=['space'])
     # Close the window
-    win.close()
+    #win.close()
 
 ## Presenting example with image ##
 def present_text_and_image(text, image_path):  # Added an image_path parameter
     # Create a full-screen PsychoPy window
-    win = visual.Window(fullscr=True)
+    #win = visual.Window(fullscr=True)
     # Create the text stimulus
     instruction = visual.TextStim(win, text=text, color="black", height=0.08, pos=(0, 0.6))  # Position text higher
     # Create the image stimulus
@@ -105,12 +128,12 @@ def present_text_and_image(text, image_path):  # Added an image_path parameter
     # Wait for the spacebar to be pressed
     event.waitKeys(keyList=['space'])
     # Close the window
-    win.close()
+    #win.close()
 
 ## Presenting video ##
 def present_video(video_path):
     # Create a full-screen PsychoPy window
-    win = visual.Window(fullscr=True)
+    #win = visual.Window(fullscr=True)
     # Create the video stimulus
     video_stim = visual.MovieStim3(win, video_path, size=(1600, 900))  # Adjust the size as needed, (1920, 1080) is fullscreen
     # Play the video until it finishes
@@ -118,16 +141,16 @@ def present_video(video_path):
         video_stim.draw()
         win.flip()
     # Wait a short moment before closing
-    core.wait(2)
+    core.wait(1)
     # Close the window after the video ends
-    win.close()
+    #win.close()
     # Save video path for logfile
     return video_path
 
 ## Presenting Decision ##
 def present_text_and_images(text, image_paths, logfile, index):
     # Create a full-screen PsychoPy window
-    win = visual.Window(fullscr=True)
+    #win = visual.Window(fullscr=True)
     
     # Create the text stimulus
     instruction = visual.TextStim(win, text=text, color="black", height=0.08, pos=(0, 0.8))
@@ -201,7 +224,7 @@ def present_text_and_images(text, image_paths, logfile, index):
     core.wait(1)  # Wait for 1 second before closing the window
 
     # Close the window
-    win.close()
+    #win.close()
     # Save the decision
     return Decision, Response_time
 
