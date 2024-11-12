@@ -1,5 +1,7 @@
 ### Viborg-Tactics ###
 
+from psychopy import prefs
+prefs.general['videoBackend'] = 'opencv'
 
 ## To-Do ##
 
@@ -79,6 +81,22 @@ task_text = "Hvad burde den markerede spiller gøre?"
 ## Create a full-screen window once at the start ##
 win = visual.Window(fullscr=True)
 
+## Presenting introduction/consent ##
+def present_text(text): # Function to present text: the only parameter is a (str) with the text to display
+    # Create a full-screen PsychoPy window
+    #win = visual.Window(fullscr=True)
+    # Create the text stimulus
+    instruction = visual.TextStim(win, text=text, color="black", height=0.08) # The height parameter might need to be adjusted
+    # Draw the text and flip the window to display it
+    instruction.draw()
+    win.flip()
+    # Wait for the spacebar to be pressed
+    event.waitKeys(keyList=['space'])
+    # Close the window
+    #win.close()
+
+present_text(consent_text) #present consent before preload
+
 ## Preload videos and images ##
 base_path = "Pictures"
 num_folders = 5
@@ -98,20 +116,6 @@ for folder_name in folder_names:
     if len(image_paths) > 4:
         image_paths = random.sample(image_paths, 4)  # Ensure only 4 images are used
     image_stimuli[folder_name] = [visual.ImageStim(win, img_path, size=(0.7, 0.7)) for img_path in image_paths]
-
-## Presenting introduction/consent ##
-def present_text(text): # Function to present text: the only parameter is a (str) with the text to display
-    # Create a full-screen PsychoPy window
-    #win = visual.Window(fullscr=True)
-    # Create the text stimulus
-    instruction = visual.TextStim(win, text=text, color="black", height=0.08) # The height parameter might need to be adjusted
-    # Draw the text and flip the window to display it
-    instruction.draw()
-    win.flip()
-    # Wait for the spacebar to be pressed
-    event.waitKeys(keyList=['space'])
-    # Close the window
-    #win.close()
 
 ## Presenting example with image ##
 def present_text_and_image(text, image_path):  # Added an image_path parameter
@@ -229,7 +233,7 @@ def present_text_and_images(text, image_paths, logfile, index):
     return Decision, Response_time
 
 ## the consent and instruction section ##
-present_text(consent_text)
+#present_text(consent_text)
 #present_text(warmup_text1)
 #present_text_and_image(warmup_text2, "Pictures/warmup_reddot.png")
 #present_text_and_image("For eksempel", "Pictures/warmup_field.png")
