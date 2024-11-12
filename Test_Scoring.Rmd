@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # Install packages if needed...
 library(dplyr)
 library(tidyr)
+library(ggplot2)
+
 
 ```
 
@@ -61,14 +63,18 @@ combined_data$Highest_Priority <- mapping[
 ## Testing ##
 
 # generating toy data:
-highest_prio <- sample(1:4, 100, replace = TRUE)
-answer <- sample(c(round(runif(85,1,4),0),round(runif(15,5,8),0)))
-participant <- c(rep(1, 50), rep(2, 50))
+#highest_prio <- sample(1:4, 100, replace = TRUE)
+#answer <- sample(c(round(runif(85,1,4),0),round(runif(15,5,8),0)))
+#participant <- c(rep(1, 50), rep(2, 50))
+highest_prio <- c(1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4)
+answer <- c(2,1,1,3,1,2,2,2,4,3,3,5,6,3,4,4,4,4,6,7,1,1,1,1,1,5,5,5,2,3,6,8,3,3,3,4,4,4,7,7)
+participant <- c(rep(1, 20), rep(2, 20))
+
 test <- data.frame(participant,highest_prio,answer)
 #table(highest_prio)
 #table(answer)
 #test %>% group_by(participant) %>% count(answer)
-#test %>% group_by(participant) %>% count(highest_prio)
+#test %>% group_by(participant, answer) %>% count(highest_prio)
 
 
 ## Max scores for each participant in 2 steps ## 
@@ -80,7 +86,7 @@ base_scores <- test %>%
     base_score = 3 * n(),  # 3 times the occurrence of each highest_prio
     .groups = 'drop'
   ) %>%
-  rename(category = highest_prio)
+  rename(principle = highest_prio)
 
 
 # Step 2: Add additional points for mismatches based on answer (non-first priority answers that's still considered 'good')
@@ -91,23 +97,23 @@ mismatch_scores <- test %>%
     mismatch_score = n(),  # 1 point for each mismatch, counted per answer category
     .groups = 'drop'
   ) %>%
-  rename(category = answer)
+  rename(principle = answer)
 
 # Combine base scores and mismatch scores 
 # in long format
 theoretical_max_scores_long <- base_scores %>%
-  full_join(mismatch_scores, by = c("participant", "category")) %>%
+  full_join(mismatch_scores, by = c("participant", "principle")) %>%
   mutate(
     max_score = base_score + coalesce(mismatch_score, 0)  # Add mismatch_score to base_score, replace NA with 0
   ) %>%
-  select(participant, category, max_score)
+  select(participant, principle, max_score)
 
 # converted to wide format
 theoretical_max_scores_wide <- theoretical_max_scores_long %>% 
   pivot_wider(
-    names_from = category,
+    names_from = principle,
     values_from = max_score,
-    names_prefix = "category_",
+    names_prefix = "principle_",
     values_fill = list(total_score = 0)
   )
 
@@ -125,8 +131,8 @@ theoretical_max_scores_wide <- theoretical_max_scores_long %>%
 # Defining a mapping for penalty relationships for the principles
 penalty_map <- c(`5` = 1, `6` = 2, `7` = 3, `8` = 4)
 
-# Calculate scores
-scores <- test %>%
+# Calculate scores in wide format
+scores_wide <- test %>%
   rowwise() %>%
   mutate(
     # Case 1: highest_prio equals answer (3 points in that category)
@@ -150,15 +156,66 @@ scores <- test %>%
   group_by(participant, score_category) %>%
   summarise(total_score = sum(score, na.rm = TRUE), .groups = 'drop') %>%
   # Convert categories into separate columns
-  pivot_wider(names_from = score_category, values_from = total_score, names_prefix = "category_", values_fill = list(total_score = 0))
+  pivot_wider(names_from = score_category, values_from = total_score, names_prefix = "principle_", values_fill = list(total_score = 0))
 
-scores
+
+# Reshape scores to long format
+scores_long <- scores_wide %>%
+  pivot_longer(cols = starts_with("principle"),
+               names_to = "principle",
+               values_to = "score") 
+
+
 
 
 
 ```
 
 
+```{r}
+
+## Results ##
+
+# calculating the percentage score for each principle in wide format.
+results_wide <- scores_wide
+results_wide[, -1] <- round((scores_wide[, -1] / theoretical_max_scores_wide[, -1])*100,2)
 
 
+# Converting to long format
+results_long <- scores_long
+results_long[, 3] <- round((scores_long[, 3] / theoretical_max_scores_long[, 3])*100,2)
+results_long <- results_long %>% rename(percentage=score)
+
+
+
+```
+
+
+```{r}
+
+# converting max scores to long format with matching principle column.
+theoretical_max_scores_long <- theoretical_max_scores_wide %>%
+  pivot_longer(cols = starts_with("principle"),
+               names_to = "principle",
+               values_to = "max") 
+
+
+# Combine the two long dataframes
+data_long <- scores_long %>% full_join(theoretical_max_scores_long, by = c("participant", "principle")) %>% 
+  full_join(results_long, by = c("participant", "principle"))
+
+
+# Plot?
+ggplot(data_long, aes(x = principle, fill = participant)) +
+  geom_bar(aes(y = max), stat = "identity", fill = "lightgray", width = 0.7) +  # Background bar for theoretical max
+  geom_bar(aes(y = score, fill = participant), stat = "identity", width = 0.7, alpha = 0.6) +  # Overlay bar for actual score
+  facet_wrap(~participant) +
+  labs(title = "Scores vs Theoretical Max by Principle and Participant",
+       x = "Principle",
+       y = "Value") +
+  theme_minimal() 
+
+
+
+```
 
