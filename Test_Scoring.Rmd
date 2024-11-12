@@ -60,7 +60,7 @@ combined_data$Highest_Priority <- mapping[
 
 
 ```{r, max scores}
-## Testing ##
+## Testing ## 
 
 # generating toy data:
 #highest_prio <- sample(1:4, 100, replace = TRUE)
