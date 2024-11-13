@@ -193,27 +193,37 @@ results_long <- results_long %>% rename(percentage=score)
 
 ```{r}
 
-# converting max scores to long format with matching principle column.
+# Converting max scores to long format with matching principle column.
 theoretical_max_scores_long <- theoretical_max_scores_wide %>%
   pivot_longer(cols = starts_with("principle"),
                names_to = "principle",
                values_to = "max") 
 
-
-# Combine the two long dataframes
+# Combine the three long dataframes.
 data_long <- scores_long %>% full_join(theoretical_max_scores_long, by = c("participant", "principle")) %>% 
   full_join(results_long, by = c("participant", "principle"))
+# recoding principle column to match actual principle names.
+data_long <- data_long %>%
+  mutate(principle = recode(principle,
+                            "principle_1" = "Highest free man",
+                            "principle_2" = "Link out",
+                            "principle_3" = "Switch play to open lines",
+                            "principle_4" = "Pass it over the opponent"))
+
 
 
 # Plot?
 ggplot(data_long, aes(x = principle, fill = participant)) +
   geom_bar(aes(y = max), stat = "identity", fill = "lightgray", width = 0.7) +  # Background bar for theoretical max
-  geom_bar(aes(y = score, fill = participant), stat = "identity", width = 0.7, alpha = 0.6) +  # Overlay bar for actual score
-  facet_wrap(~participant) +
+  geom_bar(aes(y = score, fill = participant), stat = "identity", width = 0.7, alpha = 0.6, show.legend = FALSE) + # Overlay bar for actual score
+  geom_text(aes(y = max, label = max), vjust = -0.5, color = "darkgray", size = 3) +  # Text for max values above background bars
+  geom_text(aes(y = score, label = scales::percent(percentage/100)), vjust = -0.5, color = "black", size = 3) +
+  facet_wrap(~participant, labeller = labeller(participant = function(x) paste("Spiller", x))) +
   labs(title = "Scores vs Theoretical Max by Principle and Participant",
        x = "Principle",
        y = "Value") +
-  theme_minimal() 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels by 45 degrees
 
 
 
