@@ -1,142 +1,72 @@
-## Importing modules ##
-from psychopy import visual, event, core, gui, data, clock
-import pandas as pd, random, os, glob
+from psychopy import visual, event, core
+import glob
+import random
+from multiprocessing import Process, Manager
 
-## Logfile ##
-# Making sure there is a logfile directory
-if not os.path.exists("logfiles"):
-    os.makedirs("logfiles")
+## Text for consent ##
+consent_text = "Kære deltager, du skal til at tage en test, der har til formål at vurdere din viden om fodboldstrategier og beslutningstagning. Testen tager omkring [x minutter], så vær forberedt på at afsætte din tid til dette, da testen skal gennemføres, når først den er startet. Din besvarelse vil blive anonymiseret, og dataen vil udelukkende blive brugt til forsknings- og træningsformål. \n\n Hvis du giver samtykke og gerne vil fortsætte til testen, skal du trykke på mellemrumstasten."
 
-# Define the logfile name
-logfile_name = "logfiles/logfile.csv"
+## Create a function for preloading stimuli ##
+def preload_stimuli(base_path, num_folders, stimuli_dict):
+    folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
+    random.shuffle(folder_names)
 
-## Setting up dataframe ##
-columns = ['Number', 'Position', 'Age', 'Foot', 'Experience', 'Experience_VFF', 'Tactic', 'Decision', 'RT']  # Columns for the tactical data
-logfile = pd.DataFrame(columns=columns)
+    for folder_name in folder_names:
+        # Add a placeholder entry to signal loading progress
+        stimuli_dict[folder_name] = "loading"
 
-## GUI ##
-# Creating dialogue box
-DialogueBox = gui.Dlg(title="Viborg Tactics")
-DialogueBox.addText('Udfyld venligst de nedenstående felter:')
-list_of_numbers = list(range(0, 20))  # Options for years of experience
-DialogueBox.addField('Hvor på banen spiller du?:', choices=['Fosvarsspiller', 'Midtbanespiller', 'Angriber'], color="green")
-DialogueBox.addField('Hvad er dit trøjenummer:', color="black")
-DialogueBox.addField('Hvilken fod er din dominante?:', choices=['Højre', 'Venstre'], color="green")
-DialogueBox.addField('Hvad er din alder:', color="black")
-DialogueBox.addField('Hvor mange år har du spillet fodbold?:', choices=list_of_numbers, color="green")
-DialogueBox.addField('Hvor mange år har du spillet fodbold hos VFF?:', choices=list_of_numbers, color="black")
-DialogueBox.show()
+        # Simulate preloading videos
+        video_path = f"{base_path}/{folder_name}/{folder_name}.mp4"
+        stimuli_dict[folder_name] = {
+            "video": video_path,  # Replace with actual loading logic if needed
+            "images": []
+        }
 
-# Collecting participant information
-if DialogueBox.OK:
-    Position, Number, Foot, Age, Experience, Experience_VFF = DialogueBox.data
-else:
-    core.quit()
+        # Simulate preloading images
+        image_paths = glob.glob(f"{base_path}/{folder_name}/*.png")
+        if len(image_paths) > 4:
+            image_paths = random.sample(image_paths, 4)  # Ensure only 4 images are used
+        stimuli_dict[folder_name]["images"] = image_paths
 
-# Consent and instruction texts
-consent_text = "Kære deltager, du skal til at tage en test, der har til formål at vurdere din viden om fodboldstrategier..."
-warmup_text1 = "Du vil nu blive præsenteret for 3 opvarmningsøvelser..."
-task_text = "Hvad burde den markerede spiller gøre?"
+    print("Preloading complete.")
 
-## Create a full-screen window once at the start ##
-win = visual.Window(fullscr=True)
+## Main execution ##
+if __name__ == '__main__':
+    base_path = "Pictures"
+    num_folders = 5
 
-# Preload videos and images
-base_path = "Pictures"
-num_folders = 5
-folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
-random.shuffle(folder_names)
+    # Use a manager dictionary to share preloading status between processes
+    manager = Manager()
+    stimuli_dict = manager.dict()
 
-video_stimuli = {}
-image_stimuli = {}
+    # Start the preloading process
+    preloading_process = Process(target=preload_stimuli, args=(base_path, num_folders, stimuli_dict))
+    preloading_process.start()
 
-for folder_name in folder_names:
-    # Preload videos
-    video_path = f"{base_path}/{folder_name}/{folder_name}.mp4"
-    video_stimuli[folder_name] = visual.MovieStim3(win, video_path, size=(1600, 900))
-    
-    # Preload images
-    image_paths = glob.glob(f"{base_path}/{folder_name}/*.png")
-    if len(image_paths) > 4:
-        image_paths = random.sample(image_paths, 4)  # Ensure only 4 images are used
-    image_stimuli[folder_name] = [visual.ImageStim(win, img_path, size=(0.7, 0.7)) for img_path in image_paths]
+    # Create a PsychoPy window for consent display
+    win = visual.Window(fullscr=True)
+    instruction = visual.TextStim(win, text=consent_text, color="black", height=0.08)
 
-## Present text ##
-def present_text(text):
-    instruction = visual.TextStim(win, text=text, color="black", height=0.08)
-    instruction.draw()
-    win.flip()
-    event.waitKeys(keyList=['space'])
-
-## Present video ##
-def present_video(folder_name):
-    video_stim = video_stimuli[folder_name]
-    while video_stim.status != visual.FINISHED:
-        video_stim.draw()
+    # Display the consent text while waiting for spacebar
+    while True:
+        # Draw and display the consent text
+        instruction.draw()
         win.flip()
-    core.wait(2)  # Short wait before moving on
 
-## Present images in 2x2 layout with response collection ##
-def present_text_and_images(folder_name, text):
-    images = image_stimuli[folder_name]
-    random.shuffle(images)
-    
-    # Define positions for 2x2 layout
-    positions = [(-0.4, 0.4), (0.4, 0.4), (-0.4, -0.4), (0.4, -0.4)]
-    instruction = visual.TextStim(win, text=text, color="black", height=0.08, pos=(0, 0.8))
-    
-    # Draw instruction and images in grid
-    instruction.draw()
-    for img, pos in zip(images, positions):
-        img.pos = pos
-        img.draw()
+        # Check for spacebar press to proceed
+        keys = event.getKeys(keyList=['space'])
+        if 'space' in keys:
+            print("Spacebar pressed. Exiting consent.")
+            break
+
+        # Optionally display preloading progress (debugging)
+        print(f"Preloading status: {len(stimuli_dict)} folders loaded")
+
+    # Ensure the preloading process finishes if not already done
+    if preloading_process.is_alive():
+        print("Waiting for preloading to finish...")
+        preloading_process.join()
+
+    print("Consent given and preloading completed. Proceeding to the experiment.")
     win.flip()
-
-    # Capture response and reaction time
-    timer = core.Clock()
-    mouse = event.Mouse(win=win)
-    chosen_image, response_time = None, None
-    
-    while not chosen_image:
-        if mouse.getPressed()[0]:  # Check left mouse click
-            mouse_x, mouse_y = mouse.getPos()
-            for img, pos in zip(images, positions):
-                if img.contains(mouse_x, mouse_y):
-                    chosen_image = img.image
-                    response_time = timer.getTime()
-                    break
-
-    # Map chosen image to decision label based on filename
-    decision_map = {img.image: os.path.splitext(os.path.basename(img.image))[0] for img in images}
-    return decision_map.get(chosen_image), response_time
-
-## Run Consent ##
-present_text(consent_text)
-
-# Loop through each folder and present stimuli
-for index, folder_name in enumerate(folder_names):
-    present_video(folder_name)
-    Decision, Response_time = present_text_and_images(folder_name, task_text)
-
-    # Append trial data to logfile
-    logfile = logfile.append({
-        'Number': Number,
-        'Position': Position,
-        'Age': Age,
-        'Foot': Foot,
-        'Experience': Experience,
-        'Experience_VFF': Experience_VFF,
-        'Tactic': folder_name,
-        'Decision': Decision,
-        'RT': Response_time
-    }, ignore_index=True)
-
-    # Save incrementally
-    logfile.to_csv(logfile_name, index=False)
-
-# End of experiment message
-thank_you_text = visual.TextStim(win, text="Tak", color="black", height=0.1, pos=(0, 0))
-thank_you_text.draw()
-win.flip()
-core.wait(2)
-win.close()
+    core.wait(0.5)
