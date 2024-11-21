@@ -13,7 +13,7 @@ prefs.general['videoBackend'] = 'opencv'
 # Make 2-3 practice trials to familiarize participants
 # Change the images from instructions (from tactic up screenshots to Viborg pictures)
 # Add reaction time measurement
-# Add a question to gui on what team they play
+# Add a question to gui on what age team do they play (cause some younger players l=play in older team already)
 # Check if the text is good on all the instructions
 # Add a function: if 'q' is pressed then escape experiment at any time
 
