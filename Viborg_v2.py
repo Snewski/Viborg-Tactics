@@ -283,13 +283,13 @@ warmup_path = "Warmup"
 warmup_folders = 3
 
 # Generate the folder names and shuffle them for a random order
-folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
+folder_names = [f"Klip_{i}" for i in range(1, warmup_folders + 1)]
 random.shuffle(folder_names)
 
 # Loop through each folder in the randomized order
 for index, folder_name in enumerate(folder_names):
     # Get the .png images in the current folder
-    image_paths = glob.glob(f"{base_path}/{folder_name}/*.png")
+    image_paths = glob.glob(f"{warmup_path}/{folder_name}/*.png")
     
     # Ensure only four images are selected; pick four at random if there are more
     if len(image_paths) > 4:
@@ -299,7 +299,7 @@ for index, folder_name in enumerate(folder_names):
     decision_map = {img_path: os.path.splitext(os.path.basename(img_path))[0] for img_path in image_paths}
     
     # Present the video and the images
-    Video_path = present_video(f"{base_path}/{folder_name}/{folder_name}.mp4")
+    Video_path = present_video(f"{warmup_path}/{folder_name}/{folder_name}.mp4")
     Decision, Response_time = present_text_and_images(task_text, image_paths, logfile, index=index)
     
     # Append the new entry to the logfile dataframe
