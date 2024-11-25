@@ -118,7 +118,7 @@ preload_question("Start preloading the experiment? \n\n Press 'y' to preload, or
 
 ## Preload videos and images ##
 base_path = "Pictures"
-num_folders = 40
+num_folders = 3
 folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
 random.shuffle(folder_names)
 
@@ -164,7 +164,7 @@ def present_video(video_path):
         video_stim.draw()
         win.flip()
     # Wait a short moment before closing
-    core.wait(1)
+    #core.wait(1)
     # Close the window after the video ends
     #win.close()
     # Save video path for logfile
@@ -321,7 +321,7 @@ present_text(intro_text)
 ## experiment loop ##
 # Define the base path and number of folders
 base_path = "Pictures"
-num_folders = 40
+num_folders = 3
 
 # Generate the folder names and shuffle them for a random order
 folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
