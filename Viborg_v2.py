@@ -1,5 +1,7 @@
 ### Viborg-Tactics ###
 
+from psychopy import prefs
+prefs.general['videoBackend'] = 'opencv'
 
 ## To-Do ##
 
@@ -11,6 +13,9 @@
 # Make 2-3 practice trials to familiarize participants
 # Change the images from instructions (from tactic up screenshots to Viborg pictures)
 # Add reaction time measurement
+# Add a question to gui on what age team do they play (cause some younger players l=play in older team already)
+# Check if the text is good on all the instructions
+# Add a function: if 'q' is pressed then escape experiment at any time
 
 ## Non-Script ##
 # Find video stimuli and group with red dots
@@ -29,7 +34,7 @@ if not os.path.exists("logfiles"):
 
 
 ## Setting up dataframe ##
-columns = ['Number', 'Position', 'Age', 'Foot', 'Experience', 'Experience_VFF' , 'Tactic', 'Decision', 'RT'] # Need columns for the tactical data
+columns = ['Number', 'Position', 'Age', 'Foot', 'Experience', 'Experience_VFF' , 'Video', 'Decision', 'RT'] # Need columns for the tactical data
 logfile = pd.DataFrame(columns = columns)
 
 
@@ -45,20 +50,7 @@ DialogueBox.addField('Hvilken fod er din dominante?:', choices = ['Højre', 'Ven
 DialogueBox.addField('Hvad er din alder:', color = "black")
 DialogueBox.addField('Hvor mange år har du spillet fodbold?:', choices = list_of_numbers, color = "green")
 DialogueBox.addField('Hvor mange år har du spillet fodbold hos VFF?:', choices = list_of_numbers, color = "black")
-# Showing dialogue box
-DialogueBox.show()
 
-
-# Collecting participant information
-if DialogueBox.OK:
-    Position = DialogueBox.data[0]
-    Number = DialogueBox.data[1]
-    Foot = DialogueBox.data[2]
-    Age = DialogueBox.data[3]
-    Experience = DialogueBox.data[4]
-    Experience_VFF = DialogueBox.data[5]
-else:
-    core.quit()
 
 
 ## All text chunks ##
@@ -67,19 +59,19 @@ consent_text = "Kære deltager, du skal til at tage en test, der har til formål
 
 warmup_text1 = "Du vil nu blive præsenteret for 3 opvarmningsøvelser, så du vænner dig til testens struktur. I testen får du vist en kort video som omhandler en specifik spilsituation, hvorefter du skal tage en taktisk beslutning. Efter opvarmningsøvelserne starter testen. \n\n Tryk på mellemrumstasten for at fortsætte."
 
-warmup_text2 = "Før hver spilsituation bliver vist, vil en rød prik indikere hvor bolden er, mens en rød cirkel vil angive, hvor spilleren du skal holde øje med, vil være. \n\n Tryk på mellemrumstasten for at fortsætte."
+#warmup_text2 = "Før hver spilsituation bliver vist, vil en rød prik indikere hvor bolden er, mens en rød cirkel vil angive, hvor spilleren du skal holde øje med, vil være. \n\n Tryk på mellemrumstasten for at fortsætte."
 #display a black image with red dot and red circle example along warmup_text2
 warmup_text3 = "Efter hver spilsituation vil 4 figurer blive vist på skærmen, der beskriver mulige beslutninger som den markerede spiller kan træffe igennem pile (pilene repræsenterer ikke spillerens endelige position, kun retningen af ​​hans bevægelse)."
 #display example options
 warmup_text4 = "Du skal markere den bedste løsningsmulighed for situationen og svare så hurtigt som muligt. Din score vil blive baseret på dit svar og din svartid. \n\n Tryk på mellemrumstasten for at starte opvarmningen."
-#intro_text = "Opvarmningen er nu færdig, tryk på mellemrumstasten når du er klar til at starte testen"
+intro_text = "Opvarmningen er nu færdig, tryk på mellemrumstasten når du er klar til at starte testen."
 task_text = "Hvad burde den markerede spiller gøre?"
 #next_text = "Next scene"
 
-## Presenting introduction/consent ##
+## Presenting text function ##
 def present_text(text): # Function to present text: the only parameter is a (str) with the text to display
     # Create a full-screen PsychoPy window
-    win = visual.Window(fullscr=True)
+    #win = visual.Window(fullscr=True)
     # Create the text stimulus
     instruction = visual.TextStim(win, text=text, color="black", height=0.08) # The height parameter might need to be adjusted
     # Draw the text and flip the window to display it
@@ -88,12 +80,66 @@ def present_text(text): # Function to present text: the only parameter is a (str
     # Wait for the spacebar to be pressed
     event.waitKeys(keyList=['space'])
     # Close the window
+    #win.close()
+
+## Preload question##
+def preload_question(text):
+    """
+    Function to present a question and wait for 'y' or 'n' key input.
+    - If 'y' is pressed, the program continues.
+    - If 'n' is pressed, the program quits.
+    """
+    # Create a not full-screen PsychoPy window
+    win = visual.Window(fullscr=False)
+    # Create the text stimulus
+    instruction = visual.TextStim(win, text=text, color="black", height=0.08)  # Adjust height if needed
+    while True:
+        # Draw the text and flip the window to display it
+        instruction.draw()
+        win.flip()
+        
+        # Wait for a key press and handle response
+        keys = event.waitKeys(keyList=['y', 'n'])
+        if keys:
+            if 'y' in keys:
+                break  # Proceed if 'y' is pressed
+            elif 'n' in keys:
+                win.close()  # Close the window
+                core.quit()  # Quit the program
+    
+    # Close the window before continuing
     win.close()
+
+## Create a full-screen window once at the start ##
+win = visual.Window(fullscr=False)
+
+## Start preloading? ##
+preload_question("Start preloading the experiment? \n\n Press 'y' to preload, or press 'n' to quit.")
+
+## Preload videos and images ##
+base_path = "Pictures"
+num_folders = 3
+folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
+random.shuffle(folder_names)
+
+video_stimuli = {}
+image_stimuli = {}
+
+for folder_name in folder_names:
+    # Preload videos
+    video_path = f"{base_path}/{folder_name}/{folder_name}.mp4"
+    video_stimuli[folder_name] = visual.MovieStim3(win, video_path, size=(1600, 900))
+    
+    # Preload images
+    image_paths = glob.glob(f"{base_path}/{folder_name}/*.png")
+    if len(image_paths) > 4:
+        image_paths = random.sample(image_paths, 4)  # Ensure only 4 images are used
+    image_stimuli[folder_name] = [visual.ImageStim(win, img_path, size=(0.7, 0.7)) for img_path in image_paths]
 
 ## Presenting example with image ##
 def present_text_and_image(text, image_path):  # Added an image_path parameter
     # Create a full-screen PsychoPy window
-    win = visual.Window(fullscr=True)
+    #win = visual.Window(fullscr=True)
     # Create the text stimulus
     instruction = visual.TextStim(win, text=text, color="black", height=0.08, pos=(0, 0.6))  # Position text higher
     # Create the image stimulus
@@ -105,12 +151,12 @@ def present_text_and_image(text, image_path):  # Added an image_path parameter
     # Wait for the spacebar to be pressed
     event.waitKeys(keyList=['space'])
     # Close the window
-    win.close()
+    #win.close()
 
-## Presenting video ##
+## Presenting Video ##
 def present_video(video_path):
     # Create a full-screen PsychoPy window
-    win = visual.Window(fullscr=True)
+    #win = visual.Window(fullscr=True)
     # Create the video stimulus
     video_stim = visual.MovieStim3(win, video_path, size=(1600, 900))  # Adjust the size as needed, (1920, 1080) is fullscreen
     # Play the video until it finishes
@@ -118,16 +164,16 @@ def present_video(video_path):
         video_stim.draw()
         win.flip()
     # Wait a short moment before closing
-    core.wait(2)
+    #core.wait(1)
     # Close the window after the video ends
-    win.close()
+    #win.close()
     # Save video path for logfile
     return video_path
 
 ## Presenting Decision ##
 def present_text_and_images(text, image_paths, logfile, index):
     # Create a full-screen PsychoPy window
-    win = visual.Window(fullscr=True)
+    #win = visual.Window(fullscr=True)
     
     # Create the text stimulus
     instruction = visual.TextStim(win, text=text, color="black", height=0.08, pos=(0, 0.8))
@@ -201,21 +247,82 @@ def present_text_and_images(text, image_paths, logfile, index):
     core.wait(1)  # Wait for 1 second before closing the window
 
     # Close the window
-    win.close()
+    #win.close()
     # Save the decision
     return Decision, Response_time
 
+# Showing dialogue box
+DialogueBox.show()
+
+# Collecting participant information
+if DialogueBox.OK:
+    Position = DialogueBox.data[0]
+    Number = DialogueBox.data[1]
+    Foot = DialogueBox.data[2]
+    Age = DialogueBox.data[3]
+    Experience = DialogueBox.data[4]
+    Experience_VFF = DialogueBox.data[5]
+else:
+    core.quit()
+
+
+## Create a full-screen window once at the start ##
+win = visual.Window(fullscr=True)
+
 ## the consent and instruction section ##
 present_text(consent_text)
-#present_text(warmup_text1)
+present_text(warmup_text1)
 #present_text_and_image(warmup_text2, "Pictures/warmup_reddot.png")
 #present_text_and_image("For eksempel", "Pictures/warmup_field.png")
-#present_text_and_image(warmup_text3, "Pictures/warmup_options.png")
-#present_text(warmup_text4)
+present_text_and_image(warmup_text3, "Pictures/warmup_options.png")
+present_text(warmup_text4)
 
+## warm up loop ##
+# Define the base path and number of folders
+warmup_path = "Warmup"
+warmup_folders = 3
+
+# Generate the folder names and shuffle them for a random order
+folder_names = [f"Klip_{i}" for i in range(1, warmup_folders + 1)]
+random.shuffle(folder_names)
+
+# Loop through each folder in the randomized order
+for index, folder_name in enumerate(folder_names):
+    # Get the .png images in the current folder
+    image_paths = glob.glob(f"{warmup_path}/{folder_name}/*.png")
+    
+    # Ensure only four images are selected; pick four at random if there are more
+    if len(image_paths) > 4:
+        image_paths = random.sample(image_paths, 4)
+    
+    # Map the chosen image to a decision using its filename
+    decision_map = {img_path: os.path.splitext(os.path.basename(img_path))[0] for img_path in image_paths}
+    
+    # Present the video and the images
+    Video_path = present_video(f"{warmup_path}/{folder_name}/{folder_name}.mp4")
+    Decision, Response_time = present_text_and_images(task_text, image_paths, logfile, index=index)
+    
+    # Append the new entry to the logfile dataframe
+    logfile = logfile.append({
+        'Number': Number,
+        'Position': Position,
+        'Age': Age,
+        'Foot': Foot,
+        'Experience': Experience,
+        'Experience_VFF': Experience_VFF,
+        'Video': Video_path,
+        'Decision': Decision,
+        'RT': Response_time
+    }, ignore_index=True)
+
+## start the experiment ##
+present_text(intro_text)
+
+## experiment loop ##
 # Define the base path and number of folders
 base_path = "Pictures"
-num_folders = 5
+num_folders = 3
+
 # Generate the folder names and shuffle them for a random order
 folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
 random.shuffle(folder_names)
@@ -244,7 +351,7 @@ for index, folder_name in enumerate(folder_names):
         'Foot': Foot,
         'Experience': Experience,
         'Experience_VFF': Experience_VFF,
-        'Tactic': Video_path,
+        'Video': Video_path,
         'Decision': Decision,
         'RT': Response_time
     }, ignore_index=True)
