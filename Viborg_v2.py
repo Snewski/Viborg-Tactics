@@ -34,7 +34,7 @@ if not os.path.exists("logfiles"):
 
 
 ## Setting up dataframe ##
-columns = ['Number', 'Position', 'Age', 'Foot', 'Experience', 'Experience_VFF' , 'Video', 'Decision', 'RT'] # Need columns for the tactical data
+columns = ['Number', 'Position', 'Team', 'Age', 'Foot', 'Experience', 'Experience_VFF' , 'Video', 'Decision', 'RT'] # Need columns for the tactical data
 logfile = pd.DataFrame(columns = columns)
 
 
@@ -46,10 +46,11 @@ list_of_numbers = list(range(0, 20)) # Options for years of experience
 # Adding information fields
 DialogueBox.addField('Hvor på banen spiller du?:', choices = ['Fosvarsspiller', 'Midtbanespiller', 'Angriber'], color = "green")
 DialogueBox.addField('Hvad er dit trøjenummer:', color = "black")
-DialogueBox.addField('Hvilken fod er din dominante?:', choices = ['Højre', 'Venstre'],color = "green")
-DialogueBox.addField('Hvad er din alder:', color = "black")
-DialogueBox.addField('Hvor mange år har du spillet fodbold?:', choices = list_of_numbers, color = "green")
-DialogueBox.addField('Hvor mange år har du spillet fodbold hos VFF?:', choices = list_of_numbers, color = "black")
+DialogueBox.addField('Hvilket hold spiller du for?', choices = ['U13', 'U14', 'U15', 'U16', 'U17', 'U18', 'U19', 'Førsteholdet'], 'green')
+DialogueBox.addField('Hvilken fod er din dominante?:', choices = ['Højre', 'Venstre'],color = "black")
+DialogueBox.addField('Hvad er din alder:', color = "green")
+DialogueBox.addField('Hvor mange år har du spillet fodbold?:', choices = list_of_numbers, color = "black")
+DialogueBox.addField('Hvor mange år har du spillet fodbold hos VFF?:', choices = list_of_numbers, color = "green")
 
 
 
@@ -57,13 +58,12 @@ DialogueBox.addField('Hvor mange år har du spillet fodbold hos VFF?:', choices 
 
 consent_text = "Kære deltager, du skal til at tage en test, der har til formål at vurdere din viden om fodboldstrategier og beslutningstagning. Testen tager omkring [x minutter], så vær forberedt på at afsætte din tid til dette, da testen skal gennemføres, når først den er startet. Din besvarelse vil blive anonymiseret, og dataen vil udelukkende blive brugt til forsknings- og træningsformål. \n\n Hvis du giver samtykke og gerne vil fortsætte til testen, skal du trykke på mellemrumstasten."
 
-warmup_text1 = "Du vil nu blive præsenteret for 3 opvarmningsøvelser, så du vænner dig til testens struktur. I testen får du vist en kort video som omhandler en specifik spilsituation, hvorefter du skal tage en taktisk beslutning. Efter opvarmningsøvelserne starter testen. \n\n Tryk på mellemrumstasten for at fortsætte."
+warmup_text1 = "Du vil nu blive præsenteret for 3 opvarmningsøvelser, så du vænner dig til testens struktur. I testen får du vist en kort video som omhandler en specifik spilsituation, hvorefter du skal tage en taktisk beslutning. Konteksten for hver spilsituation i testen er neutral, hvilket vil sige at du skal forestille dig at stillingen er 0-0 efter omtrent 20 minutters spilletid. Efter opvarmningsøvelserne starter testen. \n\n Tryk på mellemrumstasten for at fortsætte."
 
 #warmup_text2 = "Før hver spilsituation bliver vist, vil en rød prik indikere hvor bolden er, mens en rød cirkel vil angive, hvor spilleren du skal holde øje med, vil være. \n\n Tryk på mellemrumstasten for at fortsætte."
 #display a black image with red dot and red circle example along warmup_text2
-warmup_text3 = "Efter hver spilsituation vil 4 figurer blive vist på skærmen, der beskriver mulige beslutninger som den markerede spiller kan træffe igennem pile (pilene repræsenterer ikke spillerens endelige position, kun retningen af ​​hans bevægelse)."
-#display example options
-warmup_text4 = "Du skal markere den bedste løsningsmulighed for situationen og svare så hurtigt som muligt. Din score vil blive baseret på dit svar og din svartid. \n\n Tryk på mellemrumstasten for at starte opvarmningen."
+warmup_text3 = "Efter hver spilsituation vil 4 figurer blive vist på skærmen, der beskriver mulige beslutninger som den markerede spiller kan træffe igennem pile."
+warmup_text4 = "Du skal markere den bedste løsningsmulighed for situationen. Din score vil blive baseret på dit svar. \n\n Tryk på mellemrumstasten for at starte opvarmningen."
 intro_text = "Opvarmningen er nu færdig, tryk på mellemrumstasten når du er klar til at starte testen."
 task_text = "Hvad burde den markerede spiller gøre?"
 #next_text = "Next scene"
@@ -258,10 +258,11 @@ DialogueBox.show()
 if DialogueBox.OK:
     Position = DialogueBox.data[0]
     Number = DialogueBox.data[1]
-    Foot = DialogueBox.data[2]
-    Age = DialogueBox.data[3]
-    Experience = DialogueBox.data[4]
-    Experience_VFF = DialogueBox.data[5]
+    Team = DialogueBox.data[2]
+    Foot = DialogueBox.data[3]
+    Age = DialogueBox.data[4]
+    Experience = DialogueBox.data[5]
+    Experience_VFF = DialogueBox.data[6]
 else:
     core.quit()
 
@@ -306,6 +307,7 @@ for index, folder_name in enumerate(folder_names):
     logfile = logfile.append({
         'Number': Number,
         'Position': Position,
+        'Team': Team,
         'Age': Age,
         'Foot': Foot,
         'Experience': Experience,
@@ -347,6 +349,7 @@ for index, folder_name in enumerate(folder_names):
     logfile = logfile.append({
         'Number': Number,
         'Position': Position,
+        'Team': Team,
         'Age': Age,
         'Foot': Foot,
         'Experience': Experience,
