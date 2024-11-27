@@ -9,16 +9,12 @@ prefs.general['videoBackend'] = 'opencv'
 # Optimize the loading of the videos and images
 # Save the inputs in logfiles
 # Make sure data is collected in a desired format
-# Randomize stimuli order, while keeping video and related red dot together
 # Make 2-3 practice trials to familiarize participants
-# Change the images from instructions (from tactic up screenshots to Viborg pictures)
-# Add reaction time measurement
-# Add a question to gui on what age team do they play (cause some younger players l=play in older team already)
 # Check if the text is good on all the instructions
 # Add a function: if 'q' is pressed then escape experiment at any time
 
 ## Non-Script ##
-# Find video stimuli and group with red dots
+# Find video stimuli
 # Make pictures and text for tactical decisions
 
 
@@ -34,7 +30,7 @@ if not os.path.exists("logfiles"):
 
 
 ## Setting up dataframe ##
-columns = ['Number', 'Position', 'Age', 'Foot', 'Experience', 'Experience_VFF' , 'Video', 'Decision', 'RT'] # Need columns for the tactical data
+columns = ['Number', 'Position', 'Team', 'Age', 'Foot', 'Experience', 'Experience_VFF' , 'Video', 'Decision', 'RT'] # Need columns for the tactical data
 logfile = pd.DataFrame(columns = columns)
 
 
@@ -46,10 +42,11 @@ list_of_numbers = list(range(0, 20)) # Options for years of experience
 # Adding information fields
 DialogueBox.addField('Hvor på banen spiller du?:', choices = ['Fosvarsspiller', 'Midtbanespiller', 'Angriber'], color = "green")
 DialogueBox.addField('Hvad er dit trøjenummer:', color = "black")
-DialogueBox.addField('Hvilken fod er din dominante?:', choices = ['Højre', 'Venstre'],color = "green")
-DialogueBox.addField('Hvad er din alder:', color = "black")
-DialogueBox.addField('Hvor mange år har du spillet fodbold?:', choices = list_of_numbers, color = "green")
-DialogueBox.addField('Hvor mange år har du spillet fodbold hos VFF?:', choices = list_of_numbers, color = "black")
+DialogueBox.addField('Hvilket hold spiller du for?', choices = ['U13', 'U14', 'U15', 'U16', 'U17', 'U18', 'U19', 'Førsteholdet'], color = 'green')
+DialogueBox.addField('Hvilken fod er din dominante?:', choices = ['Højre', 'Venstre'],color = "black")
+DialogueBox.addField('Hvad er din alder:', color = "green")
+DialogueBox.addField('Hvor mange år har du spillet fodbold?:', choices = list_of_numbers, color = "black")
+DialogueBox.addField('Hvor mange år har du spillet fodbold hos VFF?:', choices = list_of_numbers, color = "green")
 
 
 
@@ -57,16 +54,24 @@ DialogueBox.addField('Hvor mange år har du spillet fodbold hos VFF?:', choices 
 
 consent_text = "Kære deltager, du skal til at tage en test, der har til formål at vurdere din viden om fodboldstrategier og beslutningstagning. Testen tager omkring [x minutter], så vær forberedt på at afsætte din tid til dette, da testen skal gennemføres, når først den er startet. Din besvarelse vil blive anonymiseret, og dataen vil udelukkende blive brugt til forsknings- og træningsformål. \n\n Hvis du giver samtykke og gerne vil fortsætte til testen, skal du trykke på mellemrumstasten."
 
-warmup_text1 = "Du vil nu blive præsenteret for 3 opvarmningsøvelser, så du vænner dig til testens struktur. I testen får du vist en kort video som omhandler en specifik spilsituation, hvorefter du skal tage en taktisk beslutning. Efter opvarmningsøvelserne starter testen. \n\n Tryk på mellemrumstasten for at fortsætte."
+warmup_text1 = "Du vil nu blive præsenteret for 3 opvarmningsøvelser, så du vænner dig til testens struktur. I testen får du vist en kort video som omhandler en specifik spilsituation, hvorefter du skal tage en taktisk beslutning. Konteksten for hver spilsituation i testen er neutral, hvilket vil sige at du skal forestille dig at stillingen er 0-0 efter omtrent 20 minutters spilletid. Efter opvarmningsøvelserne starter testen. \n\n Tryk på mellemrumstasten for at fortsætte."
 
 #warmup_text2 = "Før hver spilsituation bliver vist, vil en rød prik indikere hvor bolden er, mens en rød cirkel vil angive, hvor spilleren du skal holde øje med, vil være. \n\n Tryk på mellemrumstasten for at fortsætte."
 #display a black image with red dot and red circle example along warmup_text2
-warmup_text3 = "Efter hver spilsituation vil 4 figurer blive vist på skærmen, der beskriver mulige beslutninger som den markerede spiller kan træffe igennem pile (pilene repræsenterer ikke spillerens endelige position, kun retningen af ​​hans bevægelse)."
-#display example options
-warmup_text4 = "Du skal markere den bedste løsningsmulighed for situationen og svare så hurtigt som muligt. Din score vil blive baseret på dit svar og din svartid. \n\n Tryk på mellemrumstasten for at starte opvarmningen."
+warmup_text3 = "Efter hver spilsituation vil 4 figurer blive vist på skærmen, der beskriver mulige beslutninger som den markerede spiller kan træffe igennem pile."
+warmup_text4 = "Du skal markere den bedste løsningsmulighed for situationen. Din score vil blive baseret på dit svar. \n\n Tryk på mellemrumstasten for at starte opvarmningen."
 intro_text = "Opvarmningen er nu færdig, tryk på mellemrumstasten når du er klar til at starte testen."
 task_text = "Hvad burde den markerede spiller gøre?"
 #next_text = "Next scene"
+
+#quitting function
+def check_for_quit():
+    keys = event.getKeys(keyList=['q'])
+    if 'q' in keys:
+        print("Exiting experiment")
+        win.close()
+        core.quit()
+
 
 ## Presenting text function ##
 def present_text(text): # Function to present text: the only parameter is a (str) with the text to display
@@ -117,7 +122,7 @@ win = visual.Window(fullscr=False)
 preload_question("Start preloading the experiment? \n\n Press 'y' to preload, or press 'n' to quit.")
 
 ## Preload videos and images ##
-base_path = "Pictures"
+base_path = "Pictures_2"
 num_folders = 3
 folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
 random.shuffle(folder_names)
@@ -126,6 +131,7 @@ video_stimuli = {}
 image_stimuli = {}
 
 for folder_name in folder_names:
+    check_for_quit()  # Call this at the start or during the loop
     # Preload videos
     video_path = f"{base_path}/{folder_name}/{folder_name}.mp4"
     video_stimuli[folder_name] = visual.MovieStim3(win, video_path, size=(1600, 900))
@@ -258,10 +264,11 @@ DialogueBox.show()
 if DialogueBox.OK:
     Position = DialogueBox.data[0]
     Number = DialogueBox.data[1]
-    Foot = DialogueBox.data[2]
-    Age = DialogueBox.data[3]
-    Experience = DialogueBox.data[4]
-    Experience_VFF = DialogueBox.data[5]
+    Team = DialogueBox.data[2]
+    Foot = DialogueBox.data[3]
+    Age = DialogueBox.data[4]
+    Experience = DialogueBox.data[5]
+    Experience_VFF = DialogueBox.data[6]
 else:
     core.quit()
 
@@ -274,7 +281,7 @@ present_text(consent_text)
 present_text(warmup_text1)
 #present_text_and_image(warmup_text2, "Pictures/warmup_reddot.png")
 #present_text_and_image("For eksempel", "Pictures/warmup_field.png")
-present_text_and_image(warmup_text3, "Pictures/warmup_options.png")
+present_text_and_image(warmup_text3, "Pictures_2/warmup_options.png")
 present_text(warmup_text4)
 
 ## warm up loop ##
@@ -288,6 +295,7 @@ random.shuffle(folder_names)
 
 # Loop through each folder in the randomized order
 for index, folder_name in enumerate(folder_names):
+    check_for_quit()  # Call this at the start or during the loop
     # Get the .png images in the current folder
     image_paths = glob.glob(f"{warmup_path}/{folder_name}/*.png")
     
@@ -306,6 +314,7 @@ for index, folder_name in enumerate(folder_names):
     logfile = logfile.append({
         'Number': Number,
         'Position': Position,
+        'Team': Team,
         'Age': Age,
         'Foot': Foot,
         'Experience': Experience,
@@ -320,7 +329,7 @@ present_text(intro_text)
 
 ## experiment loop ##
 # Define the base path and number of folders
-base_path = "Pictures"
+base_path = "Pictures_2"
 num_folders = 3
 
 # Generate the folder names and shuffle them for a random order
@@ -329,6 +338,7 @@ random.shuffle(folder_names)
 
 # Loop through each folder in the randomized order
 for index, folder_name in enumerate(folder_names):
+    check_for_quit()  # Call this at the start or during the loop
     # Get the .png images in the current folder
     image_paths = glob.glob(f"{base_path}/{folder_name}/*.png")
     
@@ -347,6 +357,7 @@ for index, folder_name in enumerate(folder_names):
     logfile = logfile.append({
         'Number': Number,
         'Position': Position,
+        'Team': Team,
         'Age': Age,
         'Foot': Foot,
         'Experience': Experience,
