@@ -40,7 +40,7 @@ combined_data$X <- NULL
 
 
 # Remove "Pictures/" and ".mp4" from the Tactic column
-combined_data$Tactic <- gsub("Pictures/|\\.mp4$", "", combined_data$Tactic)
+combined_data$Video <- gsub("Pictures/|\\.mp4$", "", combined_data$Video)
 
 mapping <- c(
   "1" = "Highest free man",
@@ -50,9 +50,19 @@ mapping <- c(
 )
 
 combined_data$highest_prio <- mapping[
-  as.character(as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Tactic)))
+  as.character(as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Video)))
 ]
 
+
+mapping2 <- c(
+  "highest free man" = "1",
+  "link out" = "2",
+  "switch play" = "3",
+  "pass it over" = "4",
+)
+
+
+table(combined_data$Decision)
 
 ```
 
