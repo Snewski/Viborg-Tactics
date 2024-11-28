@@ -288,7 +288,7 @@ present_text(warmup_text1)
 present_text_and_image(warmup_text3, "Pictures_2/warmup_options.png")
 present_text(warmup_text4)
 
-## warm up loop ##
+## Warm up loop ##
 # Define the base path and number of folders
 warmup_path = "Warmup"
 warmup_folders = 3
@@ -310,11 +310,15 @@ for index, folder_name in enumerate(folder_names):
     # Map the chosen image to a decision using its filename
     decision_map = {img_path: os.path.splitext(os.path.basename(img_path))[0] for img_path in image_paths}
     
-    video_files = glob.glob(f"{warmup_path}/{folder_name}/*.mp4")
-    if len(video_files) == 0:
-        raise FileNotFoundError(f"No video found in {warmup_path}/{folder_name}")
-    Video_path = video_files[0]  # Take the first video found
-    present_video(Video_path)
+    # Find the MP4 file in the current folder
+    mp4_files = glob.glob(f"{warmup_path}/{folder_name}/*.mp4")
+    if len(mp4_files) != 1:
+        raise ValueError(f"Expected exactly one MP4 file in folder '{folder_name}', found {len(mp4_files)}.")
+    video_path = mp4_files[0]
+    
+    # Present the video and the images
+    Video_path = present_video(video_path)
+    Decision, Response_time = present_text_and_images(task_text, image_paths, logfile, index=index)
     
     # Append the new entry to the logfile dataframe
     logfile = logfile.append({
@@ -330,10 +334,11 @@ for index, folder_name in enumerate(folder_names):
         'RT': Response_time
     }, ignore_index=True)
 
+
 ## start the experiment ##
 present_text(intro_text)
 
-## experiment loop ##
+## Experiment loop ##
 # Define the base path and number of folders
 base_path = "Pictures_2"
 num_folders = 3
@@ -342,20 +347,30 @@ num_folders = 3
 folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
 random.shuffle(folder_names)
 
+# Loop through each folder in the randomized order
 for index, folder_name in enumerate(folder_names):
-    check_for_quit()
+    check_for_quit()  # Call this at the start or during the loop
+    # Get the .png images in the current folder
     image_paths = glob.glob(f"{base_path}/{folder_name}/*.png")
+    
+    # Ensure only four images are selected; pick four at random if there are more
     if len(image_paths) > 4:
         image_paths = random.sample(image_paths, 4)
+    
+    # Map the chosen image to a decision using its filename
     decision_map = {img_path: os.path.splitext(os.path.basename(img_path))[0] for img_path in image_paths}
     
-    video_files = glob.glob(f"{base_path}/{folder_name}/*.mp4")
-    if len(video_files) == 0:
-        raise FileNotFoundError(f"No video found in {base_path}/{folder_name}")
-    Video_path = video_files[0]  # Take the first video found
-    present_video(Video_path)
+    # Find the MP4 file in the current folder
+    mp4_files = glob.glob(f"{base_path}/{folder_name}/*.mp4")
+    if len(mp4_files) != 1:
+        raise ValueError(f"Expected exactly one MP4 file in folder '{folder_name}', found {len(mp4_files)}.")
+    video_path = mp4_files[0]
     
+    # Present the video and the images
+    Video_path = present_video(video_path)
     Decision, Response_time = present_text_and_images(task_text, image_paths, logfile, index=index)
+    
+    # Append the new entry to the logfile dataframe
     logfile = logfile.append({
         'Number': Number,
         'Position': Position,
