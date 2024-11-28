@@ -52,7 +52,7 @@ DialogueBox.addField('Hvor mange år har du spillet fodbold hos VFF?:', choices 
 
 ## All text chunks ##
 
-consent_text = "Kære deltager, du skal til at tage en test, der har til formål at vurdere din viden om fodboldstrategier og beslutningstagning. Testen tager omkring [x minutter], så vær forberedt på at afsætte din tid til dette, da testen skal gennemføres, når først den er startet. Din besvarelse vil blive anonymiseret, og dataen vil udelukkende blive brugt til forsknings- og træningsformål. \n\n Hvis du giver samtykke og gerne vil fortsætte til testen, skal du trykke på mellemrumstasten."
+consent_text = "Kære deltager, du skal til at tage en test, der har til formål at vurdere din viden om fodboldstrategier og beslutningstagning. Testen tager omkring 20 minutter, så vær forberedt på at afsætte din tid til dette, da testen skal gennemføres, når først den er startet. Din besvarelse vil blive anonymiseret, og dataen vil udelukkende blive brugt til forsknings- og træningsformål. \n\n Hvis du giver samtykke og gerne vil fortsætte til testen, skal du trykke på mellemrumstasten."
 
 warmup_text1 = "Du vil nu blive præsenteret for 3 opvarmningsøvelser, så du vænner dig til testens struktur. I testen får du vist en kort video som omhandler en specifik spilsituation, hvorefter du skal tage en taktisk beslutning. Konteksten for hver spilsituation i testen er neutral, hvilket vil sige at du skal forestille dig at stillingen er 0-0 efter omtrent 20 minutters spilletid. Efter opvarmningsøvelserne starter testen. \n\n Tryk på mellemrumstasten for at fortsætte."
 
@@ -69,6 +69,9 @@ def check_for_quit():
     keys = event.getKeys(keyList=['q'])
     if 'q' in keys:
         print("Exiting experiment")
+        logfile_name = f"logfiles/logfile_{Number}_{Team}.csv"
+        logfile.to_csv(logfile_name)
+        
         win.close()
         core.quit()
 
@@ -393,5 +396,5 @@ core.wait(2)
 win.close()
 
 ## Save logfile ##
-logfile_name = f"logfiles/logfile_{Number}.csv"
+logfile_name = f"logfiles/logfile_{Number}_{Team}.csv"
 logfile.to_csv(logfile_name)
