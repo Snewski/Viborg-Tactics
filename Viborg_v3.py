@@ -122,7 +122,7 @@ win = visual.Window(fullscr=False)
 preload_question("Start preloading the experiment? \n\n Press 'y' to preload, or press 'n' to quit.")
 
 ## Preload videos and images ##
-base_path = "Pictures_2"
+base_path = "Pictures"
 num_folders = 3
 folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
 random.shuffle(folder_names)
@@ -183,12 +183,15 @@ def present_video(video_path):
     return video_path
 
 ## Presenting Decision ##
-def present_text_and_images(text, image_paths, logfile, index):
+def present_text_and_images(text, image_paths, logfile, index, folder_label):
     # Create a full-screen PsychoPy window
     #win = visual.Window(fullscr=True)
     
     # Create the text stimulus
     instruction = visual.TextStim(win, text=text, color="black", height=0.08, pos=(0, 0.8))
+    
+    # Display the folder label in the bottom-right corner
+    folder_text = visual.TextStim(win, text=folder_label, pos=(0.8, -0.8), height=0.05, color='white', alignHoriz='right')
     
     # Randomly shuffle the selected images
     random.shuffle(image_paths)
@@ -204,8 +207,9 @@ def present_text_and_images(text, image_paths, logfile, index):
     image_stim_bottom_left = visual.ImageStim(win, image=image_paths[2], pos=(-horizontal_offset, -vertical_offset + grid_offset), size=(0.7, 0.7))
     image_stim_bottom_right = visual.ImageStim(win, image=image_paths[3], pos=(horizontal_offset, -vertical_offset + grid_offset), size=(0.7, 0.7))
     
-    # Draw the text and images, and flip the window to display them
+    # Draw the text, images, and folder label, and flip the window to display them
     instruction.draw()
+    folder_text.draw()  # Draw folder label
     image_stim_top_left.draw()
     image_stim_top_right.draw()
     image_stim_bottom_left.draw()
@@ -261,6 +265,7 @@ def present_text_and_images(text, image_paths, logfile, index):
     # Save the decision
     return Decision, Response_time
 
+
 # Showing dialogue box
 DialogueBox.show()
 
@@ -285,7 +290,7 @@ present_text(consent_text)
 present_text(warmup_text1)
 #present_text_and_image(warmup_text2, "Pictures/warmup_reddot.png")
 #present_text_and_image("For eksempel", "Pictures/warmup_field.png")
-present_text_and_image(warmup_text3, "Pictures_2/warmup_options.png")
+present_text_and_image(warmup_text3, "Pictures/warmup_options.png")
 present_text(warmup_text4)
 
 ## Warm up loop ##
@@ -318,7 +323,13 @@ for index, folder_name in enumerate(folder_names):
     
     # Present the video and the images
     Video_path = present_video(video_path)
-    Decision, Response_time = present_text_and_images(task_text, image_paths, logfile, index=index)
+    Decision, Response_time = present_text_and_images(
+        task_text, 
+        image_paths, 
+        logfile, 
+        index=index, 
+        folder_label=folder_name  # Pass the folder name to the function
+    )
     
     # Append the new entry to the logfile dataframe
     logfile = logfile.append({
@@ -340,7 +351,7 @@ present_text(intro_text)
 
 ## Experiment loop ##
 # Define the base path and number of folders
-base_path = "Pictures_2"
+base_path = "Pictures"
 num_folders = 3
 
 # Generate the folder names and shuffle them for a random order
@@ -368,7 +379,13 @@ for index, folder_name in enumerate(folder_names):
     
     # Present the video and the images
     Video_path = present_video(video_path)
-    Decision, Response_time = present_text_and_images(task_text, image_paths, logfile, index=index)
+    Decision, Response_time = present_text_and_images(
+        task_text, 
+        image_paths, 
+        logfile, 
+        index=index, 
+        folder_label=folder_name  # Pass the folder name to the function
+    )
     
     # Append the new entry to the logfile dataframe
     logfile = logfile.append({
@@ -384,6 +401,7 @@ for index, folder_name in enumerate(folder_names):
         'RT': Response_time
     }, ignore_index=True)
 
+
 win = visual.Window(fullscr=True)
 thank_you_text = visual.TextStim(win, text="Tak", color="black", height=0.1, pos=(0, 0))
 thank_you_text.draw()
@@ -392,5 +410,5 @@ core.wait(2)
 win.close()
 
 ## Save logfile ##
-logfile_name = f"logfiles/logfile_{Number}.csv"
+logfile_name = f"logfiles/logfile_{Number}_{Team}.csv"
 logfile.to_csv(logfile_name)
