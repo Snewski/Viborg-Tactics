@@ -13,9 +13,13 @@ prefs.general['videoBackend'] = 'opencv'
 # Check if the text is good on all the instructions
 # Add a function: if 'q' is pressed then escape experiment at any time
 
+
 ## Non-Script ##
 # Find video stimuli
 # Make pictures and text for tactical decisions
+# delete some folders to make the right ratio
+# delete the warm up scenarios from the pictures folder
+# probably update the loop after that
 
 
 ## Importing modules ##
@@ -64,11 +68,17 @@ intro_text = "Opvarmningen er nu færdig, tryk på mellemrumstasten når du er k
 task_text = "Hvad burde den markerede spiller gøre?"
 #next_text = "Next scene"
 
-#quitting function
+# Modified quitting function
 def check_for_quit():
     keys = event.getKeys(keyList=['q'])
     if 'q' in keys:
         print("Exiting experiment")
+        
+        # Save the logfile before exiting
+        logfile_name = f"logfiles/logfile_{Number}_{Team}.csv"
+        logfile.to_csv(logfile_name)
+        print(f"Logfile saved to {logfile_name}")
+        
         win.close()
         core.quit()
 
@@ -191,7 +201,7 @@ def present_text_and_images(text, image_paths, logfile, index, folder_label):
     instruction = visual.TextStim(win, text=text, color="black", height=0.08, pos=(0, 0.8))
     
     # Display the folder label in the bottom-right corner
-    folder_text = visual.TextStim(win, text=folder_label, pos=(0.8, -0.8), height=0.05, color='white', alignHoriz='right')
+    folder_text = visual.TextStim(win, text=folder_label, pos=(0.9, -0.8), height=0.05, color='black', alignHoriz='right')
     
     # Randomly shuffle the selected images
     random.shuffle(image_paths)
