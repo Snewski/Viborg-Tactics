@@ -257,7 +257,7 @@ def present_text_and_images(text, image_paths, logfile, index):
     next_scene_text = visual.TextStim(win, text="Næste Situation", color="black", height=0.1, pos=(0, 0))  # Center "Next Scene"
     next_scene_text.draw()
     win.flip()
-    core.wait(1)  # Wait for 1 second before closing the window
+    #core.wait(1)  # Wait for 1 second before closing the window
 
     # Close the window
     #win.close()
