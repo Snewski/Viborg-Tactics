@@ -77,7 +77,6 @@ def check_for_quit():
         # Save the logfile before exiting
         logfile_name = f"logfiles/logfile_{Number}_{Team}.csv"
         logfile.to_csv(logfile_name)
-        print(f"Logfile saved to {logfile_name}")
         
         win.close()
         core.quit()
@@ -98,65 +97,65 @@ def present_text(text): # Function to present text: the only parameter is a (str
     #win.close()
 
 ## Preload question##
-def preload_question(text):
-    """
-    Function to present a question and wait for 'y' or 'n' key input.
-    - If 'y' is pressed, the program continues.
-    - If 'n' is pressed, the program quits.
-    """
-    # Create a not full-screen PsychoPy window
-    win = visual.Window(fullscr=False)
-    # Create the text stimulus
-    instruction = visual.TextStim(win, text=text, color="black", height=0.08)  # Adjust height if needed
-    while True:
-        # Draw the text and flip the window to display it
-        instruction.draw()
-        win.flip()
-        
-        # Wait for a key press and handle response
-        keys = event.waitKeys(keyList=['y', 'n'])
-        if keys:
-            if 'y' in keys:
-                break  # Proceed if 'y' is pressed
-            elif 'n' in keys:
-                win.close()  # Close the window
-                core.quit()  # Quit the program
-    
-    # Close the window before continuing
-    win.close()
+#def preload_question(text):
+#    """
+#    Function to present a question and wait for 'y' or 'n' key input.
+#    - If 'y' is pressed, the program continues.
+#    - If 'n' is pressed, the program quits.
+#    """
+#    # Create a not full-screen PsychoPy window
+#    win = visual.Window(fullscr=False)
+#    # Create the text stimulus
+#    instruction = visual.TextStim(win, text=text, color="black", height=0.08)  # Adjust height if needed
+#    while True:
+#        # Draw the text and flip the window to display it
+#        instruction.draw()
+#        win.flip()
+#        
+#        # Wait for a key press and handle response
+#        keys = event.waitKeys(keyList=['y', 'n'])
+#        if keys:
+#            if 'y' in keys:
+#                break  # Proceed if 'y' is pressed
+#            elif 'n' in keys:
+#                win.close()  # Close the window
+#                core.quit()  # Quit the program
+#    
+#    # Close the window before continuing
+#    win.close()
 
 ## Create a full-screen window once at the start ##
 win = visual.Window(fullscr=False)
 
 ## Start preloading? ##
-preload_question("Start preloading the experiment? \n\n Press 'y' to preload, or press 'n' to quit.")
+#preload_question("Start preloading the experiment? \n\n Press 'y' to preload, or press 'n' to quit.")
 
 ## Preload videos and images ##
-base_path = "Pictures"
-num_folders = 3
-folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
-random.shuffle(folder_names)
+#base_path = "Pictures"
+#num_folders = 52
+#folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
+#random.shuffle(folder_names)
+#
+#video_stimuli = {}
+#image_stimuli = {}
 
-video_stimuli = {}
-image_stimuli = {}
-
-for folder_name in folder_names:
-    check_for_quit()  # Call this at the start or during the loop
-    # Preload videos
-    video_files = glob.glob(f"{base_path}/{folder_name}/*.mp4")
-    if video_files:  # Ensure video files exist
-        video_stimuli[folder_name] = visual.MovieStim3(
-            win, video_files[0], size=(1600, 900)  # Assumes one video per folder
-        )
-    else:
-        print(f"No video files found in {folder_path}")
-
-    
-    # Preload images
-    image_paths = glob.glob(f"{base_path}/{folder_name}/*.png")
-    if len(image_paths) > 4:
-        image_paths = random.sample(image_paths, 4)  # Ensure only 4 images are used
-    image_stimuli[folder_name] = [visual.ImageStim(win, img_path, size=(0.7, 0.7)) for img_path in image_paths]
+#for folder_name in folder_names:
+#    check_for_quit()  # Call this at the start or during the loop
+#    # Preload videos
+#    video_files = glob.glob(f"{base_path}/{folder_name}/*.mp4")
+#    if video_files:  # Ensure video files exist
+#        video_stimuli[folder_name] = visual.MovieStim3(
+#            win, video_files[0], size=(1600, 900)  # Assumes one video per folder
+#        )
+#    else:
+#        print(f"No video files found in {folder_path}")
+#
+#    
+#    # Preload images
+#    image_paths = glob.glob(f"{base_path}/{folder_name}/*.png")
+#    if len(image_paths) > 4:
+#        image_paths = random.sample(image_paths, 4)  # Ensure only 4 images are used
+#    image_stimuli[folder_name] = [visual.ImageStim(win, img_path, size=(0.7, 0.7)) for img_path in image_paths]
 
 ## Presenting example with image ##
 def present_text_and_image(text, image_path):  # Added an image_path parameter
@@ -362,10 +361,10 @@ present_text(intro_text)
 ## Experiment loop ##
 # Define the base path and number of folders
 base_path = "Pictures"
-num_folders = 3
+num_folders = 26
 
 # Generate the folder names and shuffle them for a random order
-folder_names = [f"Klip_{i}" for i in range(1, num_folders + 1)]
+folder_names = [f"Klip_{i}" for i in range(55, 80)]
 random.shuffle(folder_names)
 
 # Loop through each folder in the randomized order
