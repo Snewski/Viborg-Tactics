@@ -59,10 +59,16 @@ mapping2 <- c(
   "link out" = "2",
   "switch play" = "3",
   "pass it over" = "4",
+  "false highest free man" = "5",
+  "false link out" = "6",
+  "false switch play" = "7",
+  "false pass it over" = "8"
 )
 
+# Remove integers from decisions and encode to numbers
+combined_data$answer <- mapping2[gsub("[0-9]+", "", combined_data$Decision)]
 
-table(combined_data$Decision)
+table(combined_data$answer)
 
 ```
 
