@@ -1,0 +1,104 @@
+---
+title: "Reaction_time_analysis"
+author: "P.H.W"
+date: "2024-11-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Loading packages 
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggpubr)
+
+```
+
+```{r, loading data}
+
+# Set the path to your logfiles directory
+file_path <- 'logfiles/'
+
+# Get a list of all CSV files in the directory
+files <- list.files(file_path, pattern = "*.csv", full.names = TRUE)
+
+# Read and combine all CSV files into a single data frame
+combined_data <- do.call(rbind, lapply(files, read.csv))
+
+
+```
+
+
+```{r, data prep}
+
+# Renaming and starting trial order from 1 instead of 0
+combined_data$Trial_Number <- combined_data$X+1
+combined_data$X <- NULL
+
+# Anonymyzing the data 
+combined_data <- combined_data %>%
+  mutate(participant = as.numeric(factor(paste(Team, Number, sep = "_")))) 
+
+
+```
+
+```{r, data exploration}
+
+## plots ##
+# histogram of RT
+ggplot(combined_data, aes(RT)) + 
+  geom_histogram(aes(y=..density..)) +
+  facet_wrap(~Team)
+
+
+
+# Correlation of RT development through the test
+ggplot(combined_data, aes(Trial_Number, RT)) + 
+  geom_point() +
+  geom_smooth(method = lm) + 
+  facet_wrap(~Team) +
+  stat_cor(aes(label = ..r.label..), method = "pearson", color = "black", size = 4) +  # Add correlation coefficient
+  labs(title = "Reaction Time vs. Trial Number by Team",
+       x = "Trial Number",
+       y = "Reaction Time (RT)") +
+  theme_minimal()
+
+
+
+ggplot(combined_data, aes(x = Team, y = RT)) +
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2, color = "black") +  # Error bars for standard error
+  stat_summary(fun = mean, geom = "point", size = 3, color = "blue") +  # Mean points
+  stat_summary(fun = mean, geom = "line", group = 1, color = "blue") +  # Line connecting means
+  labs(title = "Mean Reaction Time by Team with Error Bars",
+       x = "Team",
+       y = "Reaction Time (RT)") +
+  theme_minimal()
+
+```
+
+
+```{r, testing}
+
+# Tests
+# Run Shapiro-Wilk test for each participant
+shapiro_results <- combined_data %>%
+  group_by(Team) %>%
+  summarise(
+    p_value = shapiro.test(RT)$p.value,
+    .groups = "drop"  # Avoid nested grouping in the result
+  )
+
+# View results
+print(shapiro_results)
+
+
+kruskal.test(RT ~ Team, data = combined_data) # Alternative to a one-way ANOVA
+
+pairwise.wilcox.test(combined_data$RT, combined_data$Team, p.adjust.method = "bonferroni") # Post-hoc Pairwise Comparisons, with Bonferroni correction
+
+
+
+```
+
