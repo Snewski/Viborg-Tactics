@@ -32,7 +32,7 @@ combined_data <- do.call(rbind, lapply(files, read.csv))
 ```
 
 
-```{r, data cleaning}
+```{r, data prep}
 
 # Renaming and starting trial order from 1 instead of 0
 combined_data$Trial_Number <- combined_data$X+1
@@ -241,9 +241,9 @@ ggplot(data_long, aes(x = principle, fill = participant)) +
   geom_bar(aes(y = max), stat = "identity", fill = "lightgray", width = 0.7) +  # Background bar for theoretical max
   geom_bar(aes(y = score, fill = participant), stat = "identity", width = 0.7, alpha = 0.6, show.legend = FALSE) + # Overlay bar for actual score
   geom_text(aes(y = max, label = max), vjust = -0.5, color = "darkgray", size = 3) +  # Text for max values above background bars
-  geom_text(aes(y = score, label = scales::percent(percentage/100)), vjust = -0.5, color = "black", size = 3) +
+  geom_text(aes(y = score, label = scales::percent(percentage/100)), vjust = -0.5, color = "black", size = 2.5) +
   scale_y_continuous(limits = c(0, 85))+
-  facet_wrap(~participant, labeller = labeller(participant = function(x) paste("Spiller", x))) +
+  facet_wrap(~participant, ncol = 5,labeller = labeller(participant = function(x) paste("Spiller", x))) +
   labs(title = "Scores vs Theoretical Max by Principle and Participant",
        x = "Principle",
        y = "Value") +
@@ -261,13 +261,22 @@ ggplot(combined_data, aes(x = highest_prio_named, fill = accuracy)) +
        y = "Count",
        fill = "Accuracy Level") 
 
-
 ggplot(combined_data, aes(x = participant, fill = accuracy)) +
   geom_bar(stat = "count", position = "dodge") +
   facet_wrap(~highest_prio_named, ncol = 1,drop = FALSE) + 
   theme_minimal() +
   labs(title = "Accuracy by Participant and Principle",
        x = "Spiller",
+       y = "Count",
+       fill = "Accuracy Level")
+
+
+ggplot(combined_data, aes(x = answer, fill = accuracy)) +
+  geom_bar(position = "dodge") +  
+  facet_wrap(~participant, ncol = 1) +  # Facet by participant
+  theme_minimal() +
+  labs(title = "Answer Accuracy for Each Participant",
+       x = "Answer",
        y = "Count",
        fill = "Accuracy Level")
 
