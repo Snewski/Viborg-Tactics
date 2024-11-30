@@ -39,7 +39,8 @@ combined_data$Trial_Number <- combined_data$X+1
 combined_data$X <- NULL
 
 # Anonymyzing the data 
-combined_data$participant <- 
+combined_data <- combined_data %>%
+  mutate(participant = as.numeric(factor(paste(Team, Number, sep = "_")))) 
 
 # Remove "Pictures/" and ".mp4" from the Tactic column
 combined_data$Video <- gsub("Pictures/|\\.mp4$", "", combined_data$Video)
@@ -52,10 +53,16 @@ mapping <- c(
 )
 
 # Extracting the highest priority from the last index
+combined_data$highest_prio <- as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Video))
+
+
 combined_data$highest_prio <- mapping[
   as.character(as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Video)))
 ]
 
+
+# Substituting wrongly named decisions
+combined_data$Decision <- trimws(combined_data$Decision) # trims any white space before and after the characters
 
 mapping2 <- c(
   "highest free man" = "1",
@@ -69,7 +76,7 @@ mapping2 <- c(
 )
 
 # Removing integers from decisions and encode to numbers
-combined_data$answer <- mapping2[gsub("[0-9]+", "", combined_data$Decision)]
+combined_data$answer <- as.numeric(mapping2[gsub("[0-9]+", "", combined_data$Decision)])
 
 table(combined_data$highest_prio)
 
@@ -85,11 +92,11 @@ table(combined_data$highest_prio)
 #highest_prio <- sample(1:4, 100, replace = TRUE)
 #answer <- sample(c(round(runif(85,1,4),0),round(runif(15,5,8),0)))
 #participant <- c(rep(1, 50), rep(2, 50))
-highest_prio <- c(1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4)
-answer <- c(2,1,1,3,1,2,2,2,4,3,3,5,6,3,4,4,4,4,6,7,1,1,1,1,1,5,5,5,2,3,6,8,3,3,3,4,4,4,7,7)
-participant <- c(rep(1, 20), rep(2, 20))
+#highest_prio <- c(1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4)
+#answer <- c(2,1,1,3,1,2,2,2,4,3,3,5,6,3,4,4,4,4,6,7,1,1,1,1,1,5,5,5,2,3,6,8,3,3,3,4,4,4,7,7)
+#participant <- c(rep(1, 20), rep(2, 20))
 
-test <- data.frame(participant,highest_prio,answer)
+#test <- data.frame(participant,highest_prio,answer)
 #table(highest_prio)
 #table(answer)
 #test %>% group_by(participant) %>% count(answer)
@@ -237,6 +244,7 @@ ggplot(data_long, aes(x = principle, fill = participant)) +
   geom_bar(aes(y = score, fill = participant), stat = "identity", width = 0.7, alpha = 0.6, show.legend = FALSE) + # Overlay bar for actual score
   geom_text(aes(y = max, label = max), vjust = -0.5, color = "darkgray", size = 3) +  # Text for max values above background bars
   geom_text(aes(y = score, label = scales::percent(percentage/100)), vjust = -0.5, color = "black", size = 3) +
+  scale_y_continuous(limits = c(0, 85))+
   facet_wrap(~participant, labeller = labeller(participant = function(x) paste("Spiller", x))) +
   labs(title = "Scores vs Theoretical Max by Principle and Participant",
        x = "Principle",
