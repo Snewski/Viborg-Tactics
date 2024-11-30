@@ -56,7 +56,7 @@ mapping <- c(
 combined_data$highest_prio <- as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Video))
 
 
-combined_data$highest_prio <- mapping[
+combined_data$highest_prio_named <- mapping[
   as.character(as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Video)))
 ]
 
@@ -235,6 +235,11 @@ data_long <- data_long %>%
                             "principle_2" = "Link out",
                             "principle_3" = "Switch play to open lines",
                             "principle_4" = "Pass it over the opponent"))
+
+# factorizing the principles
+desired_order <- c("Highest free man", "Link out", "Switch play to open lines", "Pass it over the opponent")
+data_long$principle <- factor(data_long$principle, levels = desired_order)
+
 
 
 
