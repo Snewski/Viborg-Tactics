@@ -38,6 +38,8 @@ combined_data <- do.call(rbind, lapply(files, read.csv))
 combined_data$Trial_Number <- combined_data$X+1
 combined_data$X <- NULL
 
+# Anonymyzing the data 
+combined_data$participant <- 
 
 # Remove "Pictures/" and ".mp4" from the Tactic column
 combined_data$Video <- gsub("Pictures/|\\.mp4$", "", combined_data$Video)
@@ -97,7 +99,7 @@ test <- data.frame(participant,highest_prio,answer)
 ## Max scores for each participant in 2 steps ## 
 
 # Step 1: Calculate base max score for each highest_prio category
-base_scores <- test %>%
+base_scores <- combined_data %>%
   group_by(participant, highest_prio) %>%
   summarise(
     base_score = 3 * n(),  # 3 times the occurrence of each highest_prio
@@ -107,7 +109,7 @@ base_scores <- test %>%
 
 
 # Step 2: Add additional points for mismatches based on answer (non-first priority answers that's still considered 'good')
-mismatch_scores <- test %>%
+mismatch_scores <- combined_data %>%
   filter(answer %in% c(2, 3, 4) & answer != highest_prio) %>%  # mismatches where answer is 2, 3, or 4
   group_by(participant, answer) %>%
   summarise(
@@ -149,7 +151,7 @@ theoretical_max_scores_wide <- theoretical_max_scores_long %>%
 penalty_map <- c(`5` = 1, `6` = 2, `7` = 3, `8` = 4)
 
 # Calculate scores in wide format
-scores_wide <- test %>%
+scores_wide <- combined_data %>%
   rowwise() %>%
   mutate(
     # Case 1: highest_prio equals answer (3 points in that category)
