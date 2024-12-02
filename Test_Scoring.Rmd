@@ -87,7 +87,7 @@ combined_data <- combined_data %>%
     TRUE ~ NA_character_  # In case there are any other cases (optional, can be adjusted based on your data)
   ))
 
-
+table(combined_data$Experience_VFF)
 
 ```
 
@@ -231,12 +231,10 @@ combined_data$highest_prio_named <- factor(combined_data$highest_prio_named, lev
 ```
 
 
-```{r}
+```{r, plotting}
 
+## Plots ##
 
-
-
-# Plot?
 ggplot(data_long, aes(x = principle, fill = participant)) +
   geom_bar(aes(y = max), stat = "identity", fill = "lightgray", width = 0.7) +  # Background bar for theoretical max
   geom_bar(aes(y = score, fill = participant), stat = "identity", width = 0.7, alpha = 0.6, show.legend = FALSE) + # Overlay bar for actual score
@@ -246,10 +244,22 @@ ggplot(data_long, aes(x = principle, fill = participant)) +
   facet_wrap(~participant, ncol = 5,labeller = labeller(participant = function(x) paste("Spiller", x))) +
   labs(title = "Scores vs Theoretical Max by Principle and Participant",
        x = "Principle",
-       y = "Value") +
+       y = "Points") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels by 45 degrees
 
+ggplot(data_long, aes(x = participant, fill = principle)) +
+  geom_bar(aes(y = max), stat = "identity", fill = "lightgray", width = 0.7) +  # Background bar for theoretical max
+  geom_bar(aes(y = score, fill = principle), stat = "identity", width = 0.7, alpha = 0.6, show.legend = FALSE) +  # Overlay bar for actual score
+  geom_text(aes(y = max, label = max), vjust = -0.5, color = "darkgray", size = 3) +  # Text for max values above background bars
+  geom_text(aes(y = score, label = scales::percent(percentage/100)), vjust = -0.5, color = "black", size = 2.5) +
+  scale_y_continuous(limits = c(0, 85)) +
+  facet_wrap(~principle, ncol = 5, labeller = labeller(principle = function(x) paste("", x))) +
+  labs(title = "Scores vs Theoretical Max by Participant and Principle",
+       x = "Spiller",
+       y = "Points") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels by 45 degrees
 
 
 ggplot(combined_data, aes(x = highest_prio_named, fill = accuracy)) +
@@ -279,6 +289,8 @@ ggplot(combined_data, aes(x = answer, fill = accuracy)) +
        x = "Answer",
        y = "Count",
        fill = "Accuracy Level")
+
+
 
 ```
 

@@ -50,7 +50,8 @@ combined_data <- combined_data %>%
 # histogram of RT
 ggplot(combined_data, aes(RT)) + 
   geom_histogram(aes(y=..density..)) +
-  facet_wrap(~Team)
+  facet_wrap(~Team)+
+  theme_minimal()
 
 
 
@@ -67,14 +68,10 @@ ggplot(combined_data, aes(Trial_Number, RT)) +
 
 
 
-ggplot(combined_data, aes(x = Team, y = RT)) +
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2, color = "black") +  # Error bars for standard error
-  stat_summary(fun = mean, geom = "point", size = 3, color = "blue") +  # Mean points
-  stat_summary(fun = mean, geom = "line", group = 1, color = "blue") +  # Line connecting means
-  labs(title = "Mean Reaction Time by Team with Error Bars",
-       x = "Team",
-       y = "Reaction Time (RT)") +
+ggplot(combined_data, aes(x = Team, y = RT, fill = Team)) + 
+  geom_boxplot()+
   theme_minimal()
+  
 
 ```
 
