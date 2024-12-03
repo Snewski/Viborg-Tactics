@@ -87,7 +87,7 @@ combined_data <- combined_data %>%
     TRUE ~ NA_character_  # In case there are any other cases (optional, can be adjusted based on your data)
   ))
 
-table(combined_data$Experience_VFF)
+table(combined_data$Foot)
 
 ```
 
@@ -240,8 +240,8 @@ ggplot(data_long, aes(x = principle, fill = participant)) +
   geom_bar(aes(y = score, fill = participant), stat = "identity", width = 0.7, alpha = 0.6, show.legend = FALSE) + # Overlay bar for actual score
   geom_text(aes(y = max, label = max), vjust = -0.5, color = "darkgray", size = 3) +  # Text for max values above background bars
   geom_text(aes(y = score, label = scales::percent(percentage/100)), vjust = -0.5, color = "black", size = 2.5) +
-  scale_y_continuous(limits = c(0, 85))+
-  facet_wrap(~participant, ncol = 5,labeller = labeller(participant = function(x) paste("Spiller", x))) +
+  scale_y_continuous(limits = c(0, 95))+
+  facet_wrap(~participant, ncol = 3,labeller = labeller(participant = function(x) paste("Spiller", x))) +
   labs(title = "Scores vs Theoretical Max by Principle and Participant",
        x = "Principle",
        y = "Points") +
@@ -254,7 +254,8 @@ ggplot(data_long, aes(x = participant, fill = principle)) +
   geom_text(aes(y = max, label = max), vjust = -0.5, color = "darkgray", size = 3) +  # Text for max values above background bars
   geom_text(aes(y = score, label = scales::percent(percentage/100)), vjust = -0.5, color = "black", size = 2.5) +
   scale_y_continuous(limits = c(0, 85)) +
-  facet_wrap(~principle, ncol = 5, labeller = labeller(principle = function(x) paste("", x))) +
+  scale_x_continuous(n.breaks = 9)+
+  facet_wrap(~principle, ncol = 2, labeller = labeller(principle = function(x) paste("", x))) +
   labs(title = "Scores vs Theoretical Max by Participant and Principle",
        x = "Spiller",
        y = "Points") +
@@ -264,8 +265,9 @@ ggplot(data_long, aes(x = participant, fill = principle)) +
 
 ggplot(combined_data, aes(x = highest_prio_named, fill = accuracy)) +
   geom_bar(position = "dodge") +  
-  facet_wrap(~participant, ncol = 1) +  # Facet by participant
+  facet_wrap(~participant, ncol = 3) +  # Facet by participant
   theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Rotate x-axis labels by 45 degrees 
   labs(title = "Accuracy by Highest Priority Available for Each Participant",
        x = "Highest Priority Named (Principle)",
        y = "Count",
@@ -273,8 +275,9 @@ ggplot(combined_data, aes(x = highest_prio_named, fill = accuracy)) +
 
 ggplot(combined_data, aes(x = participant, fill = accuracy)) +
   geom_bar(stat = "count", position = "dodge") +
-  facet_wrap(~highest_prio_named, ncol = 1,drop = FALSE) + 
+  facet_wrap(~highest_prio_named, ncol = 2,drop = FALSE) + 
   theme_minimal() +
+  scale_x_continuous(n.breaks = 9) +
   labs(title = "Accuracy by Participant and Principle",
        x = "Spiller",
        y = "Count",
@@ -283,8 +286,9 @@ ggplot(combined_data, aes(x = participant, fill = accuracy)) +
 
 ggplot(combined_data, aes(x = answer, fill = accuracy)) +
   geom_bar(position = "dodge") +  
-  facet_wrap(~participant, ncol = 1) +  # Facet by participant
+  facet_wrap(~participant, ncol = 3) +  # Facet by participant
   theme_minimal() +
+  scale_x_continuous(n.breaks = 9) +
   labs(title = "Answer Accuracy for Each Participant",
        x = "Answer",
        y = "Count",

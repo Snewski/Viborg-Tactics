@@ -41,6 +41,55 @@ combined_data$X <- NULL
 combined_data <- combined_data %>%
   mutate(participant = as.numeric(factor(paste(Team, Number, sep = "_")))) 
 
+# Factorizing stuff
+combined_data$Experience_VFF <- as.factor(combined_data$Experience_VFF)
+combined_data$Age <- as.factor(combined_data$Age)
+
+# Remove "Pictures/" and ".mp4" from the Tactic column
+combined_data$Video <- gsub("Pictures/|\\.mp4$", "", combined_data$Video)
+
+mapping <- c(
+  "1" = "Highest free man",
+  "2" = "Link out",
+  "3" = "Switch play to open lines",
+  "4" = "Pass it over the opponent"
+)
+
+# Extracting the highest priority from the last index
+combined_data$highest_prio <- as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Video))
+
+
+combined_data$highest_prio_named <- mapping[
+  as.character(as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Video)))
+]
+
+
+# Substituting wrongly named decisions
+combined_data$Decision <- trimws(combined_data$Decision) # trims any white space before and after the characters
+
+mapping2 <- c(
+  "highest free man" = "1",
+  "link out" = "2",
+  "switch play" = "3",
+  "pass it over" = "4",
+  "false highest free man" = "5",
+  "false link out" = "6",
+  "false switch play" = "7",
+  "false pass it over" = "8"
+)
+
+# Removing integers from decisions and encode to numbers
+combined_data$answer <- as.numeric(mapping2[gsub("[0-9]+", "", combined_data$Decision)])
+
+# Accuracy
+combined_data <- combined_data %>%
+  mutate(accuracy = case_when(
+    highest_prio == answer ~ "Best",  # Case 1: Highest prio and answer are equal
+    highest_prio != answer & answer %in% c(2, 3, 4) ~ "Good",  # Case 2: Highest prio and answer are different, and answer is 2, 3, or 4
+    highest_prio != answer & answer %in% c(5, 6, 7, 8) ~ "Bad",  # Case 3: Highest prio and answer are different, and answer is 5, 6, 7, or 8
+    TRUE ~ NA_character_  # In case there are any other cases (optional, can be adjusted based on your data)
+  ))
+
 
 ```
 
@@ -48,10 +97,17 @@ combined_data <- combined_data %>%
 
 ## plots ##
 # histogram of RT
-ggplot(combined_data, aes(RT)) + 
+ggplot(combined_data, aes(RT, fill = Team)) + 
   geom_histogram(aes(y=..density..)) +
   facet_wrap(~Team)+
-  theme_minimal()
+  theme_minimal()+
+  labs(title = "Reaction Time Distributions for the Teams")
+
+ggplot(combined_data, aes(RT, fill = Experience_VFF)) + 
+  geom_histogram(aes(y=..density..)) +
+  facet_wrap(~Experience_VFF)+
+  theme_minimal()+
+  labs(title = "Reaction Time Distributions for Years of Experience")
 
 
 
@@ -59,19 +115,38 @@ ggplot(combined_data, aes(RT)) +
 ggplot(combined_data, aes(Trial_Number, RT)) + 
   geom_point() +
   geom_smooth(method = lm) + 
-  facet_wrap(~Team) +
+  #facet_wrap(~Team, ncol = 4) +
   stat_cor(aes(label = ..r.label..), method = "pearson", color = "black", size = 4) +  # Add correlation coefficient
-  labs(title = "Reaction Time vs. Trial Number by Team",
+  labs(title = "Reaction Times vs. Trial Number",
+       x = "Trial Number",
+       y = "Reaction Time (RT)") +
+  theme_minimal()
+
+ggplot(combined_data, aes(Trial_Number, RT)) + 
+  geom_point() +
+  geom_smooth(method = lm) + 
+  facet_wrap(~Team, ncol = 4) +
+  stat_cor(aes(label = ..r.label..), method = "pearson", color = "black", size = 4) +  # Add correlation coefficient
+  labs(title = "Reaction Times vs. Trial Number",
        x = "Trial Number",
        y = "Reaction Time (RT)") +
   theme_minimal()
 
 
-
-ggplot(combined_data, aes(x = Team, y = RT, fill = Team)) + 
+# Boxplots
+ggplot(combined_data, aes(x = Age, y = RT, fill = Age)) + 
   geom_boxplot()+
-  theme_minimal()
+  theme_minimal()+
+  labs(title = "Reaction Times across Age")
   
+
+ggplot(combined_data, aes(x = highest_prio_named, y = RT, fill = highest_prio_named)) + 
+  geom_boxplot()+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Reaction Times across Priorities",
+       x = 'Priority')
+
 
 ```
 
@@ -80,20 +155,34 @@ ggplot(combined_data, aes(x = Team, y = RT, fill = Team)) +
 
 # Tests
 # Run Shapiro-Wilk test for each participant
-shapiro_results <- combined_data %>%
+combined_data %>%
   group_by(Team) %>%
   summarise(
     p_value = shapiro.test(RT)$p.value,
+    W_statistic = shapiro.test(RT)$statistic,
     .groups = "drop"  # Avoid nested grouping in the result
   )
 
-# View results
-print(shapiro_results)
+
+combined_data %>%
+  group_by(Experience_VFF) %>%
+  summarise(
+    p_value = shapiro.test(RT)$p.value,
+    W_statistic = shapiro.test(RT)$statistic,
+    .groups = "drop"  # Avoid nested grouping in the result
+  )
 
 
 kruskal.test(RT ~ Team, data = combined_data) # Alternative to a one-way ANOVA
 
 pairwise.wilcox.test(combined_data$RT, combined_data$Team, p.adjust.method = "bonferroni") # Post-hoc Pairwise Comparisons, with Bonferroni correction
+
+
+kruskal.test(RT ~ Experience_VFF, data = combined_data) # Alternative to a one-way ANOVA
+
+pairwise.wilcox.test(combined_data$RT, combined_data$Experience_VFF, p.adjust.method = "bonferroni") # Post-hoc Pairwise Comparisons, with Bonferroni correction
+
+
 
 
 
