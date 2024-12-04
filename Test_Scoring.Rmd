@@ -87,7 +87,18 @@ combined_data <- combined_data %>%
     TRUE ~ NA_character_  # In case there are any other cases (optional, can be adjusted based on your data)
   ))
 
-table(combined_data$Team)
+# Saving dataframe
+
+write.csv(combined_data, "combined_data.csv", row.names = FALSE)
+
+# Removing the Number and Age Column to anonymize
+
+combined_data <- combined_data %>%
+  select(-Number, -Age)
+
+
+write.csv(combined_data, "anonymized_data.csv", row.names = FALSE)
+
 
 ```
 
@@ -262,6 +273,19 @@ subset_data2$principle <- factor(subset_data2$principle, levels = desired_order)
 subset_data3 <- data_long %>%
   filter(Team %in% "U17")
 
+subset_data4 <- combined_data %>%
+  filter(Team %in% "U17")
+
+subset_data4 <- subset_data4 %>%
+  mutate(principle = case_when(
+    answer %in% c(1, 5) ~ "Highest free man",
+    answer %in% c(2, 6) ~ "Link out",
+    answer %in% c(3, 7) ~ "Switch play to open lines",
+    answer %in% c(4, 8) ~ "Pass it over the opponent"
+  ))
+
+subset_data4$principle <- factor(subset_data4$principle, levels = desired_order)
+
 
 ## Plots ##
 
@@ -282,6 +306,10 @@ ggplot(subset_data, aes(x = principle, fill = participant)) +
 
 ggplot(subset_data2, aes(x = highest_prio_named, fill = accuracy)) +
   geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5) + # Adjust position of the text
+  scale_y_continuous(limits = c(0, 35), n.breaks = 10) +
   scale_y_continuous(limits = c(0, 17), n.breaks = 10) +
   facet_wrap(~participant, ncol = 2, labeller = labeller(participant = function(x) paste("Spiller", x))) +  # Facet by participant
   theme_minimal() +
@@ -294,6 +322,9 @@ ggplot(subset_data2, aes(x = highest_prio_named, fill = accuracy)) +
 
 ggplot(subset_data2, aes(x = principle, fill = principle)) +
   geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5) + # Adjust position of the text
   scale_y_continuous(limits = c(0, 35), n.breaks = 10) +
   facet_wrap(~participant, ncol = 2, labeller = labeller(participant = function(x) paste("Spiller", x))) +  # Facet by participant
   theme_minimal() +
@@ -319,6 +350,21 @@ ggplot(subset_data3, aes(x = participant, fill = principle)) +
        y = "Points") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels by 45 degrees
+
+
+ggplot(subset_data4, aes(x = accuracy, fill = principle)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5) + # Adjust position of the text
+  scale_y_continuous(limits = c(0, 20), n.breaks = 15) +
+  facet_wrap(~participant, ncol = 3, labeller = labeller(participant = function(x) paste("Spiller", x))) +  # Facet by participant
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Rotate x-axis labels by 45 degrees 
+  labs(title = "Count of Answers by Principle and Accuracy for the U17 Team",
+       x = "Accuracy",
+       y = "Count",
+       fill = "Principle") 
 
 
 ggplot(combined_data, aes(x = participant, fill = accuracy)) +
