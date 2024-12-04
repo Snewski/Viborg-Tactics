@@ -1,6 +1,6 @@
 ---
 title: "Reaction_time_analysis"
-author: "P.H.W"
+author: "P.H.W & G.G.S"
 date: "2024-11-30"
 output: html_document
 ---
@@ -18,6 +18,8 @@ library(ggpubr)
 
 ```{r, loading data}
 
+## GGS ##
+
 # Set the path to your logfiles directory
 file_path <- 'logfiles/'
 
@@ -32,6 +34,8 @@ combined_data <- do.call(rbind, lapply(files, read.csv))
 
 
 ```{r, data prep}
+
+## PHW ##
 
 # Renaming and starting trial order from 1 instead of 0
 combined_data$Trial_Number <- combined_data$X+1
@@ -95,6 +99,8 @@ combined_data <- combined_data %>%
 
 ```{r, data exploration}
 
+## GGS ##
+
 ## plots ##
 # histogram of RT
 ggplot(combined_data, aes(RT, fill = Team)) + 
@@ -127,18 +133,35 @@ ggplot(combined_data, aes(Trial_Number, RT)) +
   geom_smooth(method = lm) + 
   facet_wrap(~Team, ncol = 4) +
   stat_cor(aes(label = ..r.label..), method = "pearson", color = "black", size = 4) +  # Add correlation coefficient
-  labs(title = "Reaction Times vs. Trial Number",
+  labs(title = "Reaction Times vs. Trial Number by Team",
+       x = "Trial Number",
+       y = "Reaction Time (RT)") +
+  theme_minimal()
+
+
+ggplot(combined_data, aes(Trial_Number, RT)) + 
+  geom_point() +
+  geom_smooth(method = lm) + 
+  facet_wrap(~Experience_VFF, ncol = 4) +
+  stat_cor(aes(label = ..r.label..), method = "pearson", color = "black", size = 4) +  # Add correlation coefficient
+  labs(title = "Reaction Times vs. Trial Number by Years of Experience",
        x = "Trial Number",
        y = "Reaction Time (RT)") +
   theme_minimal()
 
 
 # Boxplots
+ggplot(combined_data, aes(x = Experience_VFF, y = RT, fill = Experience_VFF)) + 
+  geom_boxplot()+
+  theme_minimal()+
+  labs(title = "Reaction Times across Experience")
+  
+
 ggplot(combined_data, aes(x = Age, y = RT, fill = Age)) + 
   geom_boxplot()+
   theme_minimal()+
   labs(title = "Reaction Times across Age")
-  
+
 
 ggplot(combined_data, aes(x = highest_prio_named, y = RT, fill = highest_prio_named)) + 
   geom_boxplot()+
@@ -148,10 +171,21 @@ ggplot(combined_data, aes(x = highest_prio_named, y = RT, fill = highest_prio_na
        x = 'Priority')
 
 
+acc_order <- c("Best", "Good", "Bad")
+combined_data$accuracy <- factor(combined_data$accuracy, levels = acc_order)
+
+ggplot(combined_data, aes(x = accuracy, y = RT, fill = accuracy)) + 
+  geom_boxplot()+
+  theme_minimal()+
+  labs(title = "Reaction Times across Accuracy")
+
+
 ```
 
 
 ```{r, testing}
+
+## PHW ##
 
 # Tests
 # Run Shapiro-Wilk test for each participant
