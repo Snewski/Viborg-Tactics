@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-
+library(ggpubr)
 
 ```
 
@@ -32,12 +32,15 @@ combined_data <- do.call(rbind, lapply(files, read.csv))
 ```
 
 
-```{r, data cleaning}
+```{r, data prep}
 
 # Renaming and starting trial order from 1 instead of 0
 combined_data$Trial_Number <- combined_data$X+1
 combined_data$X <- NULL
 
+# Anonymyzing the data 
+combined_data <- combined_data %>%
+  mutate(participant = as.numeric(factor(paste(Team, Number, sep = "_")))) 
 
 # Remove "Pictures/" and ".mp4" from the Tactic column
 combined_data$Video <- gsub("Pictures/|\\.mp4$", "", combined_data$Video)
@@ -50,10 +53,16 @@ mapping <- c(
 )
 
 # Extracting the highest priority from the last index
-combined_data$highest_prio <- mapping[
+combined_data$highest_prio <- as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Video))
+
+
+combined_data$highest_prio_named <- mapping[
   as.character(as.numeric(gsub(".*_(\\d+)$", "\\1", combined_data$Video)))
 ]
 
+
+# Substituting wrongly named decisions
+combined_data$Decision <- trimws(combined_data$Decision) # trims any white space before and after the characters
 
 mapping2 <- c(
   "highest free man" = "1",
@@ -67,9 +76,29 @@ mapping2 <- c(
 )
 
 # Removing integers from decisions and encode to numbers
-combined_data$answer <- mapping2[gsub("[0-9]+", "", combined_data$Decision)]
+combined_data$answer <- as.numeric(mapping2[gsub("[0-9]+", "", combined_data$Decision)])
 
-table(combined_data$highest_prio)
+# Accuracy
+combined_data <- combined_data %>%
+  mutate(accuracy = case_when(
+    highest_prio == answer ~ "Best",  # Case 1: Highest prio and answer are equal
+    highest_prio != answer & answer %in% c(2, 3, 4) ~ "Good",  # Case 2: Highest prio and answer are different, and answer is 2, 3, or 4
+    highest_prio != answer & answer %in% c(5, 6, 7, 8) ~ "Bad",  # Case 3: Highest prio and answer are different, and answer is 5, 6, 7, or 8
+    TRUE ~ NA_character_  # In case there are any other cases (optional, can be adjusted based on your data)
+  ))
+
+# Saving dataframe
+
+write.csv(combined_data, "combined_data.csv", row.names = FALSE)
+
+# Removing the Number and Age Column to anonymize
+
+combined_data <- combined_data %>%
+  select(-Number, -Age)
+
+
+write.csv(combined_data, "anonymized_data.csv", row.names = FALSE)
+
 
 ```
 
@@ -77,27 +106,12 @@ table(combined_data$highest_prio)
 
 
 ```{r, max scores}
-## Testing ## 
-
-# generating toy data:
-#highest_prio <- sample(1:4, 100, replace = TRUE)
-#answer <- sample(c(round(runif(85,1,4),0),round(runif(15,5,8),0)))
-#participant <- c(rep(1, 50), rep(2, 50))
-highest_prio <- c(1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4)
-answer <- c(2,1,1,3,1,2,2,2,4,3,3,5,6,3,4,4,4,4,6,7,1,1,1,1,1,5,5,5,2,3,6,8,3,3,3,4,4,4,7,7)
-participant <- c(rep(1, 20), rep(2, 20))
-
-test <- data.frame(participant,highest_prio,answer)
-#table(highest_prio)
-#table(answer)
-#test %>% group_by(participant) %>% count(answer)
-#test %>% group_by(participant, answer) %>% count(highest_prio)
-
-
 ## Max scores for each participant in 2 steps ## 
 
+combined_data <- read.csv('combined_data.csv')
+
 # Step 1: Calculate base max score for each highest_prio category
-base_scores <- test %>%
+base_scores <- combined_data %>%
   group_by(participant, highest_prio) %>%
   summarise(
     base_score = 3 * n(),  # 3 times the occurrence of each highest_prio
@@ -107,7 +121,7 @@ base_scores <- test %>%
 
 
 # Step 2: Add additional points for mismatches based on answer (non-first priority answers that's still considered 'good')
-mismatch_scores <- test %>%
+mismatch_scores <- combined_data %>%
   filter(answer %in% c(2, 3, 4) & answer != highest_prio) %>%  # mismatches where answer is 2, 3, or 4
   group_by(participant, answer) %>%
   summarise(
@@ -134,9 +148,6 @@ theoretical_max_scores_wide <- theoretical_max_scores_long %>%
     values_fill = list(total_score = 0)
   )
 
-
-
-
 ```
 
 
@@ -149,7 +160,7 @@ theoretical_max_scores_wide <- theoretical_max_scores_long %>%
 penalty_map <- c(`5` = 1, `6` = 2, `7` = 3, `8` = 4)
 
 # Calculate scores in wide format
-scores_wide <- test %>%
+scores_wide <- combined_data %>%
   rowwise() %>%
   mutate(
     # Case 1: highest_prio equals answer (3 points in that category)
@@ -183,9 +194,6 @@ scores_long <- scores_wide %>%
                values_to = "score") 
 
 
-
-
-
 ```
 
 
@@ -204,12 +212,6 @@ results_long[, 3] <- round((scores_long[, 3] / theoretical_max_scores_long[, 3])
 results_long <- results_long %>% rename(percentage=score)
 
 
-
-```
-
-
-```{r}
-
 # Converting max scores to long format with matching principle column.
 theoretical_max_scores_long <- theoretical_max_scores_wide %>%
   pivot_longer(cols = starts_with("principle"),
@@ -227,26 +229,181 @@ data_long <- data_long %>%
                             "principle_3" = "Switch play to open lines",
                             "principle_4" = "Pass it over the opponent"))
 
+# factorizing stuff
+desired_order <- c("Highest free man", "Link out", "Switch play to open lines", "Pass it over the opponent")
+data_long$principle <- factor(data_long$principle, levels = desired_order)
 
 
-# Plot?
-ggplot(data_long, aes(x = principle, fill = participant)) +
+acc_order <- c("Best", "Good", "Bad")
+combined_data$accuracy <- factor(combined_data$accuracy, levels = acc_order)
+combined_data$highest_prio_named <- factor(combined_data$highest_prio_named, levels = desired_order)
+
+
+# Adding Team column to combined_data 
+unique_combined_data <- combined_data %>%
+  select(participant, Team) %>%
+  distinct()
+
+data_long <- data_long %>%
+  left_join(unique_combined_data, by = "participant")
+
+
+```
+
+
+```{r, plotting}
+
+## Subsetting Data ##
+
+subset_data <- data_long %>%
+  filter(participant %in% c(5, 9))
+
+subset_data2 <- combined_data %>%
+  filter(participant %in% c(5, 9))
+
+subset_data2 <- subset_data2 %>%
+  mutate(principle = case_when(
+    answer %in% c(1, 5) ~ "Highest free man",
+    answer %in% c(2, 6) ~ "Link out",
+    answer %in% c(3, 7) ~ "Switch play to open lines",
+    answer %in% c(4, 8) ~ "Pass it over the opponent"
+  ))
+
+subset_data2$principle <- factor(subset_data2$principle, levels = desired_order)
+
+
+subset_data3 <- data_long %>%
+  filter(Team %in% "U17")
+
+subset_data4 <- combined_data %>%
+  filter(Team %in% "U17")
+
+subset_data4 <- subset_data4 %>%
+  mutate(principle = case_when(
+    answer %in% c(1, 5) ~ "Highest free man",
+    answer %in% c(2, 6) ~ "Link out",
+    answer %in% c(3, 7) ~ "Switch play to open lines",
+    answer %in% c(4, 8) ~ "Pass it over the opponent"
+  ))
+
+subset_data4$principle <- factor(subset_data4$principle, levels = desired_order)
+
+
+## Plots ##
+
+## Player ##
+
+ggplot(subset_data, aes(x = principle, fill = participant)) +
   geom_bar(aes(y = max), stat = "identity", fill = "lightgray", width = 0.7) +  # Background bar for theoretical max
   geom_bar(aes(y = score, fill = participant), stat = "identity", width = 0.7, alpha = 0.6, show.legend = FALSE) + # Overlay bar for actual score
   geom_text(aes(y = max, label = max), vjust = -0.5, color = "darkgray", size = 3) +  # Text for max values above background bars
-  geom_text(aes(y = score, label = scales::percent(percentage/100)), vjust = -0.5, color = "black", size = 3) +
-  facet_wrap(~participant, labeller = labeller(participant = function(x) paste("Spiller", x))) +
+  geom_text(aes(y = score, label = scales::percent(percentage/100)), vjust = -0.5, color = "black", size = 2.5) +
+  scale_y_continuous(limits = c(0, 85), n.breaks = 20)+
+  facet_wrap(~participant, ncol = 3,labeller = labeller(participant = function(x) paste("Spiller", x))) +
   labs(title = "Scores vs Theoretical Max by Principle and Participant",
        x = "Principle",
-       y = "Value") +
+       y = "Points") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels by 45 degrees
+
+ggplot(subset_data2, aes(x = highest_prio_named, fill = accuracy)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5) + # Adjust position of the text
+  scale_y_continuous(limits = c(0, 35), n.breaks = 10) +
+  scale_y_continuous(limits = c(0, 17), n.breaks = 10) +
+  facet_wrap(~participant, ncol = 2, labeller = labeller(participant = function(x) paste("Spiller", x))) +  # Facet by participant
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Rotate x-axis labels by 45 degrees 
+  labs(title = "Accuracy by Highest Priority Available",
+       x = "Highest Priority Principle",
+       y = "Count",
+       fill = "Accuracy Level") 
+
+
+ggplot(subset_data2, aes(x = principle, fill = principle)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5) + # Adjust position of the text
+  scale_y_continuous(limits = c(0, 35), n.breaks = 10) +
+  facet_wrap(~participant, ncol = 2, labeller = labeller(participant = function(x) paste("Spiller", x))) +  # Facet by participant
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Rotate x-axis labels by 45 degrees 
+  labs(title = "Principle related to Participant Answer",
+       x = "Principle",
+       y = "Count",
+       fill = "Principle") 
+
+
+## Teams ##
+
+ggplot(subset_data3, aes(x = participant, fill = principle)) +
+  geom_bar(aes(y = max), stat = "identity", fill = "lightgray", width = 0.7) +  # Background bar for theoretical max
+  geom_bar(aes(y = score, fill = principle), stat = "identity", width = 0.7, alpha = 0.6, show.legend = FALSE) +  # Overlay bar for actual score
+  geom_text(aes(y = max, label = max), vjust = -0.5, color = "darkgray", size = 3) +  # Text for max values above background bars
+  geom_text(aes(y = score, label = scales::percent(percentage/100)), vjust = -0.5, color = "black", size = 2.5) +
+  scale_y_continuous(limits = c(0, 85)) +
+  scale_x_continuous(limits = c(4.5, 7.5))+
+  facet_wrap(~principle, ncol = 4, labeller = labeller(principle = function(x) paste("", x))) +
+  labs(title = "Scores vs Theoretical Max by Principle for the U17 Team",
+       x = "Spiller",
+       y = "Points") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels by 45 degrees
 
 
-ggplot(combined_data, aes(Trial_Number, RT)) + geom_point() #
-  
-  
+ggplot(subset_data4, aes(x = accuracy, fill = principle)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5) + # Adjust position of the text
+  scale_y_continuous(limits = c(0, 20), n.breaks = 15) +
+  facet_wrap(~participant, ncol = 3, labeller = labeller(participant = function(x) paste("Spiller", x))) +  # Facet by participant
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Rotate x-axis labels by 45 degrees 
+  labs(title = "Count of Answers by Principle and Accuracy for the U17 Team",
+       x = "Accuracy",
+       y = "Count",
+       fill = "Principle") 
 
+
+ggplot(combined_data, aes(x = participant, fill = accuracy)) +
+  geom_bar(stat = "count", position = "dodge") +
+  facet_wrap(~highest_prio_named, ncol = 2,drop = FALSE) + 
+  theme_minimal() +
+  scale_x_continuous(n.breaks = 9) +
+  labs(title = "Accuracy by Participant and Principle",
+       x = "Spiller",
+       y = "Count",
+       fill = "Accuracy Level")
+
+
+ggplot(combined_data, aes(x = answer, fill = accuracy)) +
+  geom_bar(position = "dodge") +  
+  facet_wrap(~participant, ncol = 3) +  # Facet by participant
+  theme_minimal() +
+  scale_x_continuous(n.breaks = 9) +
+  labs(title = "Answer Accuracy for Each Participant",
+       x = "Answer",
+       y = "Count",
+       fill = "Accuracy Level")
+
+
+
+subset_data4$Video <- sub(".*\\\\", "", subset_data4$Video)
+subset_data4$participant <- factor(subset_data4$participant)
+
+
+ggplot(subset(subset_data4, accuracy == "Bad"), aes(Video, fill = participant)) + 
+  geom_bar(stat = 'count') +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Videos that made the U17 team make bad solutions",
+       x = "Video",
+       y = "Count",
+       fill = "Spiller")
 
 
 
