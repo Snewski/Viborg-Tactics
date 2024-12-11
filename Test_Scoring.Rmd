@@ -108,6 +108,8 @@ write.csv(combined_data, "anonymized_data.csv", row.names = FALSE)
 ```{r, max scores}
 ## Max scores for each participant in 2 steps ## 
 
+combined_data <- read.csv('combined_data.csv')
+
 # Step 1: Calculate base max score for each highest_prio category
 base_scores <- combined_data %>%
   group_by(participant, highest_prio) %>%
@@ -387,6 +389,21 @@ ggplot(combined_data, aes(x = answer, fill = accuracy)) +
        x = "Answer",
        y = "Count",
        fill = "Accuracy Level")
+
+
+
+subset_data4$Video <- sub(".*\\\\", "", subset_data4$Video)
+subset_data4$participant <- factor(subset_data4$participant)
+
+
+ggplot(subset(subset_data4, accuracy == "Bad"), aes(Video, fill = participant)) + 
+  geom_bar(stat = 'count') +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Videos that made the U17 team make bad solutions",
+       x = "Video",
+       y = "Count",
+       fill = "Spiller")
 
 
 
